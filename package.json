@@ -14,6 +14,7 @@
     "precios": "node precios/cli.js",
     "stock": "node stock/cli.js",
     "cobranzas": "node cobranzas/cli.js",
+    "comprobantes": "node comprobantes/cli.js",
     "sync-datos": "node scripts/sync-datos.mjs",
     "predev": "node scripts/sync-datos.mjs",
     "dev": "npm --workspace web run dev",

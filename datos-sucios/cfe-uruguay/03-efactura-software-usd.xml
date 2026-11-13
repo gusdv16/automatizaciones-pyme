@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<DGICFE:EnvioCFE version="1.0" xmlns:DGICFE="http://cfe.dgi.gub.uy">
+  <DGICFE:Caratula version="1.0">
+    <DGICFE:RutReceptor>214844360018</DGICFE:RutReceptor>
+    <DGICFE:RUCEmisor>215551110016</DGICFE:RUCEmisor>
+    <DGICFE:CantCFE>1</DGICFE:CantCFE>
+  </DGICFE:Caratula>
+  <DGICFE:CFE version="1.0" xmlns:DGICFE="http://cfe.dgi.gub.uy">
+  <DGICFE:eFact>
+    <DGICFE:TmstFirma>2026-11-05T10:30:00-03:00</DGICFE:TmstFirma>
+    <DGICFE:Encabezado>
+      <DGICFE:IdDoc>
+        <DGICFE:TipoCFE>111</DGICFE:TipoCFE>
+        <DGICFE:Serie>A</DGICFE:Serie>
+        <DGICFE:Nro>903</DGICFE:Nro>
+        <DGICFE:FchEmis>2026-11-05</DGICFE:FchEmis>
+        <DGICFE:FmaPago>1</DGICFE:FmaPago>
+      </DGICFE:IdDoc>
+      <DGICFE:Emisor>
+        <DGICFE:RUCEmisor>215551110016</DGICFE:RUCEmisor>
+        <DGICFE:RznSoc>NUBE SUR SOFTWARE S.R.L.</DGICFE:RznSoc>
+        <DGICFE:CdgDGISucur>1</DGICFE:CdgDGISucur>
+        <DGICFE:DomFiscal>18 de Julio 1234</DGICFE:DomFiscal>
+        <DGICFE:Ciudad>MONTEVIDEO</DGICFE:Ciudad>
+        <DGICFE:Departamento>MONTEVIDEO</DGICFE:Departamento>
+      </DGICFE:Emisor>
+      <DGICFE:Receptor>
+        <DGICFE:TipoDocRecep>2</DGICFE:TipoDocRecep>
+        <DGICFE:CodPaisRecep>UY</DGICFE:CodPaisRecep>
+        <DGICFE:DocRecep>214844360018</DGICFE:DocRecep>
+        <DGICFE:RznSocRecep>COMERCIAL DEL PLATA S.A.</DGICFE:RznSocRecep>
+      </DGICFE:Receptor>
+      <DGICFE:Totales>
+        <DGICFE:TpoMoneda>USD</DGICFE:TpoMoneda>
+        <DGICFE:TpoCambio>41.850</DGICFE:TpoCambio>
+        <DGICFE:MntNetoIVATasaBasica>150.00</DGICFE:MntNetoIVATasaBasica>
+        <DGICFE:IVATasaBasica>22</DGICFE:IVATasaBasica>
+        <DGICFE:MntIVATasaBasica>33.00</DGICFE:MntIVATasaBasica>
+        <DGICFE:MntTotal>183.00</DGICFE:MntTotal>
+        <DGICFE:CantLinDet>1</DGICFE:CantLinDet>
+        <DGICFE:MntPagar>183.00</DGICFE:MntPagar>
+      </DGICFE:Totales>
+    </DGICFE:Encabezado>
+  </DGICFE:eFact>
+</DGICFE:CFE>
+</DGICFE:EnvioCFE>

@@ -9,7 +9,5 @@ const origen = path.join(raiz, 'datos-sucios');
 const destino = path.join(raiz, 'web', 'public', 'datos');
 
 fs.mkdirSync(destino, { recursive: true });
-for (const f of fs.readdirSync(origen)) {
-  fs.copyFileSync(path.join(origen, f), path.join(destino, f));
-}
-console.log(`Copiados ${fs.readdirSync(destino).length} archivos de ejemplo a web/public/datos/`);
+fs.cpSync(origen, destino, { recursive: true });
+console.log(`Sincronizado datos-sucios/ -> web/public/datos/`);

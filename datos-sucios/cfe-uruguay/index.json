@@ -1,0 +1,16 @@
+{
+  "miRut": "214844360018",
+  "razonSocial": "COMERCIAL DEL PLATA S.A.",
+  "archivos": [
+    "01-efactura-telecom.xml",
+    "02-efactura-mayorista-mixta.xml",
+    "03-efactura-software-usd.xml",
+    "04-nc-devolucion-mayorista.xml",
+    "05-eticket-con-rut-papeleria.xml",
+    "06-eticket-consumidor-final.xml",
+    "07-efactura-duplicada.xml",
+    "08-efactura-iva-mal-calculado.xml",
+    "09-efactura-rut-invalido.xml",
+    "10-efactura-otro-rut.xml"
+  ]
+}

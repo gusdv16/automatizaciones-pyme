@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<DGICFE:EnvioCFE version="1.0" xmlns:DGICFE="http://cfe.dgi.gub.uy">
+  <DGICFE:Caratula version="1.0">
+    <DGICFE:RutReceptor>214844360018</DGICFE:RutReceptor>
+    <DGICFE:RUCEmisor>210303670010</DGICFE:RUCEmisor>
+    <DGICFE:CantCFE>1</DGICFE:CantCFE>
+  </DGICFE:Caratula>
+  <DGICFE:CFE version="1.0" xmlns:DGICFE="http://cfe.dgi.gub.uy">
+  <DGICFE:eFact>
+    <DGICFE:TmstFirma>2026-11-04T10:30:00-03:00</DGICFE:TmstFirma>
+    <DGICFE:Encabezado>
+      <DGICFE:IdDoc>
+        <DGICFE:TipoCFE>111</DGICFE:TipoCFE>
+        <DGICFE:Serie>B</DGICFE:Serie>
+        <DGICFE:Nro>1842</DGICFE:Nro>
+        <DGICFE:FchEmis>2026-11-04</DGICFE:FchEmis>
+        <DGICFE:FmaPago>2</DGICFE:FmaPago>
+      </DGICFE:IdDoc>
+      <DGICFE:Emisor>
+        <DGICFE:RUCEmisor>210303670010</DGICFE:RUCEmisor>
+        <DGICFE:RznSoc>DISTRIBUIDORA ORIENTAL LTDA.</DGICFE:RznSoc>
+        <DGICFE:CdgDGISucur>1</DGICFE:CdgDGISucur>
+        <DGICFE:DomFiscal>18 de Julio 1234</DGICFE:DomFiscal>
+        <DGICFE:Ciudad>MONTEVIDEO</DGICFE:Ciudad>
+        <DGICFE:Departamento>MONTEVIDEO</DGICFE:Departamento>
+      </DGICFE:Emisor>
+      <DGICFE:Receptor>
+        <DGICFE:TipoDocRecep>2</DGICFE:TipoDocRecep>
+        <DGICFE:CodPaisRecep>UY</DGICFE:CodPaisRecep>
+        <DGICFE:DocRecep>214844360018</DGICFE:DocRecep>
+        <DGICFE:RznSocRecep>COMERCIAL DEL PLATA S.A.</DGICFE:RznSocRecep>
+      </DGICFE:Receptor>
+      <DGICFE:Totales>
+        <DGICFE:TpoMoneda>UYU</DGICFE:TpoMoneda>
+        <DGICFE:MntNoGrv>1500.00</DGICFE:MntNoGrv>
+        <DGICFE:MntNetoIvaTasaMin>8000.00</DGICFE:MntNetoIvaTasaMin>
+        <DGICFE:MntNetoIVATasaBasica>12000.00</DGICFE:MntNetoIVATasaBasica>
+        <DGICFE:IVATasaMin>10</DGICFE:IVATasaMin>
+        <DGICFE:IVATasaBasica>22</DGICFE:IVATasaBasica>
+        <DGICFE:MntIVATasaMin>800.00</DGICFE:MntIVATasaMin>
+        <DGICFE:MntIVATasaBasica>2640.00</DGICFE:MntIVATasaBasica>
+        <DGICFE:MntTotal>24940.00</DGICFE:MntTotal>
+        <DGICFE:CantLinDet>1</DGICFE:CantLinDet>
+        <DGICFE:MntPagar>24940.00</DGICFE:MntPagar>
+      </DGICFE:Totales>
+    </DGICFE:Encabezado>
+  </DGICFE:eFact>
+</DGICFE:CFE>
+</DGICFE:EnvioCFE>

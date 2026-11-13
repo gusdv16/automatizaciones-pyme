@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<DGICFE:CFE version="1.0" xmlns:DGICFE="http://cfe.dgi.gub.uy">
+  <DGICFE:eTck>
+    <DGICFE:TmstFirma>2026-11-07T10:30:00-03:00</DGICFE:TmstFirma>
+    <DGICFE:Encabezado>
+      <DGICFE:IdDoc>
+        <DGICFE:TipoCFE>101</DGICFE:TipoCFE>
+        <DGICFE:Serie>A</DGICFE:Serie>
+        <DGICFE:Nro>77812</DGICFE:Nro>
+        <DGICFE:FchEmis>2026-11-07</DGICFE:FchEmis>
+        <DGICFE:FmaPago>1</DGICFE:FmaPago>
+      </DGICFE:IdDoc>
+      <DGICFE:Emisor>
+        <DGICFE:RUCEmisor>217772220015</DGICFE:RUCEmisor>
+        <DGICFE:RznSoc>PAPELERIA CENTRO S.A.</DGICFE:RznSoc>
+        <DGICFE:CdgDGISucur>1</DGICFE:CdgDGISucur>
+        <DGICFE:DomFiscal>18 de Julio 1234</DGICFE:DomFiscal>
+        <DGICFE:Ciudad>MONTEVIDEO</DGICFE:Ciudad>
+        <DGICFE:Departamento>MONTEVIDEO</DGICFE:Departamento>
+      </DGICFE:Emisor>
+      <DGICFE:Receptor>
+        <DGICFE:TipoDocRecep>2</DGICFE:TipoDocRecep>
+        <DGICFE:CodPaisRecep>UY</DGICFE:CodPaisRecep>
+        <DGICFE:DocRecep>214844360018</DGICFE:DocRecep>
+        <DGICFE:RznSocRecep>COMERCIAL DEL PLATA S.A.</DGICFE:RznSocRecep>
+      </DGICFE:Receptor>
+      <DGICFE:Totales>
+        <DGICFE:TpoMoneda>UYU</DGICFE:TpoMoneda>
+        <DGICFE:MntNetoIVATasaBasica>1200.00</DGICFE:MntNetoIVATasaBasica>
+        <DGICFE:IVATasaBasica>22</DGICFE:IVATasaBasica>
+        <DGICFE:MntIVATasaBasica>264.00</DGICFE:MntIVATasaBasica>
+        <DGICFE:MntTotal>1464.00</DGICFE:MntTotal>
+        <DGICFE:CantLinDet>1</DGICFE:CantLinDet>
+        <DGICFE:MntPagar>1464.00</DGICFE:MntPagar>
+      </DGICFE:Totales>
+    </DGICFE:Encabezado>
+  </DGICFE:eTck>
+</DGICFE:CFE>

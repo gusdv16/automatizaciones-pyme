@@ -1,0 +1,191 @@
+---
+import Base from '../layouts/Base.astro';
+const base = import.meta.env.BASE_URL;
+---
+<Base title="Lector y validador de CFE (DGI Uruguay)" description="Procesá un lote de XML de Comprobantes Fiscales Electrónicos de Uruguay, valida RUT, tasas de IVA y duplicados, y descargá el libro de compras.">
+  <span class="eyebrow">Solución 6 · Uruguay</span>
+  <h1>Lector y validador de CFE (DGI Uruguay)</h1>
+  <p class="lead">
+    A fin de mes llegan decenas de mails con comprobantes en pesos y en dólares. Esta solución procesa un
+    lote de archivos XML de Comprobantes Fiscales Electrónicos, valida el RUT emisor, el RUT receptor, las
+    tasas de IVA (22% y 10%), los totales y los duplicados, y te entrega el libro de compras listo para el
+    contador, con las observaciones separadas.
+  </p>
+
+  <div class="panel">
+    <div class="grid cols-3">
+      <div>
+        <label class="field" for="f-xmls">Archivos XML de CFE (múltiples)</label>
+        <input id="f-xmls" type="file" accept=".xml" multiple>
+      </div>
+      <div>
+        <label class="field" for="inp-rut">Tu RUT (receptor)</label>
+        <input id="inp-rut" type="text" value="21-484436-001-8" placeholder="21-484436-001-8">
+      </div>
+      <div>
+        <label class="field" for="inp-tc">Tipo de cambio USD (si falta en el XML)</label>
+        <input id="inp-tc" type="number" value="42" min="0" step="0.01">
+      </div>
+    </div>
+    <div class="actions">
+      <button class="btn ghost" id="btn-ejemplo" type="button">Usar datos de ejemplo (10 CFE)</button>
+      <button class="btn" id="btn-procesar" type="button" disabled>Procesar</button>
+      <button class="btn hidden" id="btn-xlsx" type="button" disabled>Descargar Excel</button>
+      <span class="sm" id="estado"></span>
+    </div>
+  </div>
+
+  <div id="resultado" class="hidden">
+    <h2>Resultado</h2>
+    <div class="kpis" id="kpis"></div>
+    <div id="avisos"></div>
+
+    <h3>Comprobantes válidos <span class="badge ok">libro de compras</span></h3>
+    <div class="tabla-scroll" id="t-compras"></div>
+
+    <details>
+      <summary>Ver observaciones (${0})</summary>
+      <div class="tabla-scroll" id="t-obs"></div>
+    </details>
+  </div>
+
+  <h2>Qué valida</h2>
+  <ul>
+    <li><strong>Dígito verificador del RUT</strong> (12 dígitos, Módulo 11 de DGI).</li>
+    <li><strong>RUT receptor</strong>: detecta comprobantes a consumidor final o a otro RUT distinto al de tu empresa.</li>
+    <li><strong>Cuadre de tasas</strong>: IVA 22% (tasa básica), IVA 10% (tasa mínima), exento y total.</li>
+    <li><strong>Notas de Crédito</strong>: restan automáticamente en el libro de compras.</li>
+    <li><strong>Duplicados</strong>: por RUT Emisor + Tipo CFE + Serie + Número.</li>
+    <li><strong>Moneda USD / UYU</strong>: convierte a pesos usando el tipo de cambio del propio comprobante.</li>
+  </ul>
+  <div class="note">El mismo resultado lo genera el script <code>npm run comprobantes</code> desde la terminal. Todo corre en tu navegador: los XML no salen de tu computadora.</div>
+
+  <script>
+    import { validarComprobantes, formatearRutUY } from '../../../core/comprobantes.js';
+    import { formatearMonto } from '../../../core/formato.js';
+    import { descargarXLSX } from '../lib/descargas.js';
+
+    const base = document.body.dataset.base || '/';
+    const $ = (s) => document.querySelector(s);
+    let archivos = [];
+    let resultado = null;
+
+    const estado = (t) => { $('#estado').textContent = t || ''; };
+
+    $('#f-xmls').addEventListener('change', async (e) => {
+      const files = [...(e.target.files || [])];
+      if (!files.length) return;
+      archivos = await Promise.all(files.map(async (f) => ({ nombre: f.name, contenido: await f.text() })));
+      estado(`${archivos.length} archivo(s) XML cargado(s).`);
+      $('#btn-procesar').disabled = false;
+    });
+
+    $('#btn-ejemplo').addEventListener('click', async () => {
+      estado('Cargando lote de ejemplo (10 CFE)…');
+      const idx = await fetch(base + 'datos/cfe-uruguay/index.json').then((r) => r.json());
+      const cargados = await Promise.all(idx.archivos.map(async (name) => {
+        const contenido = await fetch(base + 'datos/cfe-uruguay/' + name).then((r) => r.text());
+        return { nombre: name, contenido };
+      }));
+      archivos = cargados;
+      $('#inp-rut').value = idx.miRut ? formatearRutUY(idx.miRut) : $('#inp-rut').value;
+      estado(`Ejemplo cargado: ${archivos.length} comprobantes CFE.`);
+      $('#btn-procesar').disabled = false;
+    });
+
+    function fmt(n) { return formatearMonto(n); }
+
+    $('#btn-procesar').addEventListener('click', () => {
+      const miRut = $('#inp-rut').value.trim();
+      const tc = Number($('#inp-tc').value) || 42;
+      resultado = validarComprobantes(archivos, { miRut, tipoCambioUsd: tc });
+
+      $('#kpis').innerHTML = `
+        <div class="kpi ok"><b>${resultado.resumen.comprobantesValidos}</b><span>comprobantes válidos</span></div>
+        <div class="kpi err"><b>${resultado.resumen.conObservaciones}</b><span>con observaciones</span></div>
+        <div class="kpi"><b>${fmt(resultado.resumen.neto22UYU)}</b><span>neto 22%</span></div>
+        <div class="kpi"><b>${fmt(resultado.resumen.iva22UYU)}</b><span>IVA 22%</span></div>
+        <div class="kpi"><b>${fmt(resultado.resumen.neto10UYU)}</b><span>neto 10%</span></div>
+        <div class="kpi"><b>${fmt(resultado.resumen.iva10UYU)}</b><span>IVA 10%</span></div>
+        <div class="kpi"><b>${fmt(resultado.resumen.exentoUYU)}</b><span>exento</span></div>
+        <div class="kpi warn"><b>${fmt(resultado.resumen.totalUYU)}</b><span>total (UYU)</span></div>`;
+
+      $('#avisos').innerHTML = resultado.avisos.length
+        ? `<ul class="avisos">${resultado.avisos.map((a) => `<li>${a}</li>`).join('')}</ul>`
+        : '';
+
+      const trC = resultado.compras.map((c) => `
+        <tr>
+          <td>${c.fecha}</td>
+          <td>${c.tipoNombre}</td>
+          <td>${c.comprobante}</td>
+          <td>${formatearRutUY(c.rucEmisor)}</td>
+          <td>${c.razonSocial}</td>
+          <td>${c.moneda}</td>
+          <td class="num">${fmt(c.neto22)}</td>
+          <td class="num">${fmt(c.iva22)}</td>
+          <td class="num">${fmt(c.neto10)}</td>
+          <td class="num">${fmt(c.iva10)}</td>
+          <td class="num">${fmt(c.exento)}</td>
+          <td class="num"><b>${fmt(c.total)}</b></td>
+          <td class="num">${fmt(c.totalUYU)}</td>
+        </tr>`).join('');
+      $('#t-compras').innerHTML = `<table><thead><tr>
+        <th>Fecha</th><th>Tipo</th><th>Comprobante</th><th>RUT Emisor</th><th>Proveedor</th><th>Moneda</th>
+        <th class="num">Neto 22</th><th class="num">IVA 22</th><th class="num">Neto 10</th><th class="num">IVA 10</th>
+        <th class="num">Exento</th><th class="num">Total</th><th class="num">Total UYU</th></tr></thead><tbody>
+        ${trC || '<tr><td colspan="13">Sin comprobantes válidos.</td></tr>'}</tbody></table>`;
+
+      const trO = resultado.observaciones.map((o) => `
+        <tr class="err">
+          <td>${o.archivo}</td>
+          <td>${o.fecha || '—'}</td>
+          <td>${o.tipoNombre}</td>
+          <td>${o.comprobante}</td>
+          <td>${formatearRutUY(o.rucEmisor)}</td>
+          <td>${o.razonSocial}</td>
+          <td class="num">${fmt(o.total)}</td>
+          <td><ul class="motivos">${o.motivos.map((m) => `<li>${m}</li>`).join('')}</ul></td>
+        </tr>`).join('');
+      $('#t-obs').innerHTML = `<table><thead><tr>
+        <th>Archivo</th><th>Fecha</th><th>Tipo</th><th>Comprobante</th><th>RUT Emisor</th><th>Proveedor</th>
+        <th class="num">Total</th><th>Motivo</th></tr></thead><tbody>
+        ${trO || '<tr><td colspan="8">Sin observaciones. 🎉</td></tr>'}</tbody></table>`;
+
+      const det = document.querySelector('#resultado details summary');
+      if (det) det.textContent = `Ver observaciones (${resultado.observaciones.length})`;
+
+      $('#btn-xlsx').disabled = false;
+      $('#btn-xlsx').classList.remove('hidden');
+      $('#resultado').classList.remove('hidden');
+      $('#resultado').scrollIntoView({ behavior: 'smooth', block: 'start' });
+      estado(`${resultado.resumen.comprobantesValidos} válidos, ${resultado.resumen.conObservaciones} con observaciones.`);
+    });
+
+    $('#btn-xlsx').addEventListener('click', () => {
+      if (!resultado) return;
+      descargarXLSX('libro-compras.xlsx', [
+        {
+          nombre: 'Compras',
+          filas: resultado.compras.map((c) => ({
+            Fecha: c.fecha, Tipo: c.tipoNombre, Comprobante: c.comprobante,
+            RUT_Emisor: formatearRutUY(c.rucEmisor), Proveedor: c.razonSocial, Moneda: c.moneda, TC: c.tipoCambio,
+            Neto_22: c.neto22, IVA_22: c.iva22, Neto_10: c.neto10, IVA_10: c.iva10, Exento: c.exento,
+            Total: c.total, Total_UYU: c.totalUYU,
+          })),
+          encabezado: ['Fecha','Tipo','Comprobante','RUT_Emisor','Proveedor','Moneda','TC','Neto_22','IVA_22','Neto_10','IVA_10','Exento','Total','Total_UYU'],
+        },
+        {
+          nombre: 'Observaciones',
+          filas: resultado.observaciones.map((o) => ({
+            Archivo: o.archivo, Fecha: o.fecha, Tipo: o.tipoNombre, Comprobante: o.comprobante,
+            RUT_Emisor: formatearRutUY(o.rucEmisor), Proveedor: o.razonSocial, Total: o.total,
+            Motivo: o.motivos.join(' | '),
+          })),
+          encabezado: ['Archivo','Fecha','Tipo','Comprobante','RUT_Emisor','Proveedor','Total','Motivo'],
+        },
+      ]);
+      estado('Excel descargado (hojas "Compras" + "Observaciones").');
+    });
+  </script>
+</Base>

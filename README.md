@@ -50,6 +50,13 @@ olvida, afectando el flujo de caja. Esta solución lee las deudas pendientes, la
 por vencer, vencida), calcula lo adeudado por cliente y genera un mensaje de cobro personalizado listo para
 enviar por WhatsApp o correo.
 
+### 6. Lector y validador de CFE (DGI Uruguay)
+
+A fin de mes llegan decenas de mails con comprobantes en pesos y en dólares. Esta solución procesa un lote de
+archivos XML de Comprobantes Fiscales Electrónicos de Uruguay (e-Factura, e-Ticket, Notas de Crédito/Débito),
+valida el RUT emisor y receptor (dígito verificador Módulo 11 de DGI), el cuadre de IVA 22% y 10%, los
+totales, los duplicados y las Notas de Crédito, y arma el libro de compras en Excel listo para el contador.
+
 ## Cómo se usan
 
 Hay dos formas, y las dos comparten exactamente la misma lógica:
@@ -67,6 +74,7 @@ npm run etiquetas    # inventario -> salidas/etiquetas.pdf
 npm run precios      # lista del proveedor -> salidas/precios-limpios.xlsx
 npm run stock        # inventario -> salidas/ordenes-compra.pdf + .csv
 npm run cobranzas    # cuentas corrientes -> salidas/cobranzas.csv (con mensajes)
+npm run comprobantes # carpeta de XML CFE -> salidas/libro-compras.xlsx
 ```
 
 Cada uno acepta tus propios archivos:
@@ -98,6 +106,7 @@ automatizaciones-pyme/
 ├─ precios/           # Programa del validador de listas
 ├─ stock/             # Programa de órdenes de compra por stock mínimo
 ├─ cobranzas/         # Programa de cobranzas y cuentas corrientes
+├─ comprobantes/      # Lector y validador de CFE (DGI Uruguay)
 ├─ datos-sucios/      # Muestras con errores reales
 ├─ scripts/           # Generación y sincronización de datos de ejemplo
 └─ web/               # Demo web (Astro) que reusa core/

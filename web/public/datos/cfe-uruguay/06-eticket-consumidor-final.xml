@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<DGICFE:CFE version="1.0" xmlns:DGICFE="http://cfe.dgi.gub.uy">
+  <DGICFE:eTck>
+    <DGICFE:TmstFirma>2026-11-08T10:30:00-03:00</DGICFE:TmstFirma>
+    <DGICFE:Encabezado>
+      <DGICFE:IdDoc>
+        <DGICFE:TipoCFE>101</DGICFE:TipoCFE>
+        <DGICFE:Serie>C</DGICFE:Serie>
+        <DGICFE:Nro>3319</DGICFE:Nro>
+        <DGICFE:FchEmis>2026-11-08</DGICFE:FchEmis>
+        <DGICFE:FmaPago>1</DGICFE:FmaPago>
+      </DGICFE:IdDoc>
+      <DGICFE:Emisor>
+        <DGICFE:RUCEmisor>218883330011</DGICFE:RUCEmisor>
+        <DGICFE:RznSoc>ESTACION DE SERVICIO RUTA 1</DGICFE:RznSoc>
+        <DGICFE:CdgDGISucur>1</DGICFE:CdgDGISucur>
+        <DGICFE:DomFiscal>18 de Julio 1234</DGICFE:DomFiscal>
+        <DGICFE:Ciudad>MONTEVIDEO</DGICFE:Ciudad>
+        <DGICFE:Departamento>MONTEVIDEO</DGICFE:Departamento>
+      </DGICFE:Emisor>
+      <DGICFE:Totales>
+        <DGICFE:TpoMoneda>UYU</DGICFE:TpoMoneda>
+        <DGICFE:MntNetoIVATasaBasica>3000.00</DGICFE:MntNetoIVATasaBasica>
+        <DGICFE:IVATasaBasica>22</DGICFE:IVATasaBasica>
+        <DGICFE:MntIVATasaBasica>660.00</DGICFE:MntIVATasaBasica>
+        <DGICFE:MntTotal>3660.00</DGICFE:MntTotal>
+        <DGICFE:CantLinDet>1</DGICFE:CantLinDet>
+        <DGICFE:MntPagar>3660.00</DGICFE:MntPagar>
+      </DGICFE:Totales>
+    </DGICFE:Encabezado>
+  </DGICFE:eTck>
+</DGICFE:CFE>
