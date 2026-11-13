@@ -1,0 +1,152 @@
+---
+import Base from '../layouts/Base.astro';
+const base = import.meta.env.BASE_URL;
+---
+<Base title="Órdenes de compra por stock mínimo" description="Detectá qué productos están por debajo del mínimo y generá las órdenes de compra agrupadas por proveedor, en PDF y CSV.">
+  <span class="eyebrow">Solución 4</span>
+  <h1>Órdenes de compra por stock mínimo</h1>
+  <p class="lead">
+    El encargado de compras revisa el inventario a ojo y a veces se entera tarde de que falta mercadería.
+    Esta solución lee el stock actual y el mínimo de cada producto, detecta los faltantes y arma las órdenes
+    de compra agrupadas por proveedor, con la cantidad a pedir y el costo estimado, en PDF y CSV.
+  </p>
+
+  <div class="panel">
+    <div class="grid cols-2">
+      <div>
+        <label class="field" for="f-inv">Inventario (CSV o Excel)</label>
+        <input id="f-inv" type="file" accept=".csv,.xlsx,.xls">
+      </div>
+      <div>
+        <label class="field" for="sel-min">Stock mínimo por defecto (si falta en el archivo)</label>
+        <input id="sel-min" type="number" value="" min="0" step="1" placeholder="sin default">
+      </div>
+    </div>
+    <div class="actions">
+      <button class="btn ghost" id="btn-ejemplo" type="button">Usar datos de ejemplo</button>
+      <button class="btn" id="btn-generar" type="button" disabled>Generar órdenes</button>
+      <button class="btn hidden" id="btn-pdf" type="button" disabled>Descargar PDF</button>
+      <button class="btn ghost hidden" id="btn-csv" type="button" disabled>Descargar CSV</button>
+      <span class="sm" id="estado"></span>
+    </div>
+  </div>
+
+  <div id="resultado" class="hidden">
+    <h2>Resultado</h2>
+    <div class="kpis" id="kpis"></div>
+    <div id="avisos"></div>
+    <div id="grupos"></div>
+  </div>
+
+  <h2>Cómo lo hace</h2>
+  <ul>
+    <li>Lee el inventario y valida cada producto: necesita código, nombre y stock actual.</li>
+    <li>Detecta los que están por debajo del stock mínimo (o del mínimo por defecto si no viene).</li>
+    <li>Agrupa los faltantes por proveedor y calcula la cantidad a pedir y el costo estimado.</li>
+    <li>Genera un PDF (una sección por proveedor, listo para imprimir/enviar) y un CSV.</li>
+  </ul>
+  <div class="note">El mismo resultado lo genera el script <code>npm run stock</code> desde la terminal.</div>
+
+  <script>
+    import { analizarStock } from '../../../core/stock.js';
+    import { generarPDFStock } from '../../../core/pdf-stock.js';
+    import { formatearMonto } from '../../../core/formato.js';
+    import { leerArchivo, leerEjemplo } from '../lib/tabla.js';
+    import { descargar, descargarCSV } from '../lib/descargas.js';
+
+    const base = document.body.dataset.base || '/';
+    const $ = (s) => document.querySelector(s);
+    let filas = null;
+    let resultado = null;
+
+    const estado = (t) => { $('#estado').textContent = t || ''; };
+
+    $('#f-inv').addEventListener('change', async (e) => {
+      if (!e.target.files[0]) return;
+      filas = await leerArchivo(e.target.files[0]);
+      estado(`Inventario cargado: ${filas.length} productos.`);
+      $('#btn-generar').disabled = false;
+    });
+    $('#btn-ejemplo').addEventListener('click', async () => {
+      estado('Cargando ejemplo…');
+      filas = await leerEjemplo(base + 'datos/inventario-stock.csv');
+      estado(`Ejemplo cargado: ${filas.length} productos.`);
+      $('#btn-generar').disabled = false;
+    });
+
+    function grupoHTML(g) {
+      const filas = g.items.map((it) => `
+        <tr>
+          <td>${it.codigo}</td>
+          <td>${it.nombre}</td>
+          <td class="num">${it.stockActual}</td>
+          <td class="num">${it.stockMinimo}</td>
+          <td class="num"><b>${it.aPedir}</b></td>
+          <td class="num">${formatearMonto(it.costo)}</td>
+          <td class="num">${formatearMonto(it.aPedir * it.costo)}</td>
+        </tr>`).join('');
+      return `
+        <div class="panel" style="margin-top:0.8rem">
+          <h3 style="margin-top:0">${g.proveedor}</h3>
+          <div class="tabla-scroll">
+            <table>
+              <thead><tr>
+                <th>Código</th><th>Producto</th><th class="num">Stock</th><th class="num">Mínimo</th>
+                <th class="num">Pedir</th><th class="num">Costo</th><th class="num">Subtotal</th>
+              </tr></thead>
+              <tbody>${filas}</tbody>
+            </table>
+          </div>
+          <p class="sm" style="margin-top:0.6rem"><b>${g.totalUnidades}</b> unidades · <b>${formatearMonto(g.totalCosto)}</b></p>
+        </div>`;
+    }
+
+    $('#btn-generar').addEventListener('click', () => {
+      const def = $('#sel-min').value;
+      const stockMinimoDefault = def === '' ? null : Number(def);
+      resultado = analizarStock(filas, { stockMinimoDefault });
+
+      $('#kpis').innerHTML = `
+        <div class="kpi"><b>${resultado.resumen.total}</b><span>productos leídos</span></div>
+        <div class="kpi err"><b>${resultado.resumen.faltantes}</b><span>a reponer</span></div>
+        <div class="kpi"><b>${resultado.resumen.grupos}</b><span>proveedores</span></div>
+        <div class="kpi warn"><b>${resultado.resumen.unidadesAPedir}</b><span>unidades a pedir</span></div>
+        <div class="kpi"><b>${formatearMonto(resultado.resumen.costoEstimado)}</b><span>costo estimado</span></div>`;
+
+      $('#avisos').innerHTML = resultado.avisos.length
+        ? `<ul class="avisos">${resultado.avisos.map((a) => `<li>${a.mensaje}</li>`).join('')}</ul>`
+        : '';
+
+      $('#grupos').innerHTML = resultado.grupos.map(grupoHTML).join('') || '<p class="sm">No hay productos por debajo del mínimo. 🎉</p>';
+
+      $('#btn-pdf').disabled = false;
+      $('#btn-pdf').classList.remove('hidden');
+      $('#btn-csv').disabled = false;
+      $('#btn-csv').classList.remove('hidden');
+      $('#resultado').classList.remove('hidden');
+      $('#resultado').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+
+    $('#btn-pdf').addEventListener('click', async () => {
+      if (!resultado) return;
+      $('#btn-pdf').disabled = true;
+      estado('Armando el PDF…');
+      const doc = await generarPDFStock(resultado.grupos);
+      const bytes = await doc.save();
+      descargar('ordenes-compra.pdf', bytes, 'application/pdf');
+      estado('PDF descargado.');
+      $('#btn-pdf').disabled = false;
+    });
+
+    $('#btn-csv').addEventListener('click', () => {
+      if (!resultado) return;
+      descargarCSV('ordenes-compra.csv', resultado.faltantes.map((f) => ({
+        proveedor: f.proveedor, codigo: f.codigo, nombre: f.nombre,
+        stock_actual: f.stockActual, stock_minimo: f.stockMinimo,
+        cantidad_a_pedir: f.aPedir, costo_unitario: f.costo,
+        subtotal: +(f.aPedir * f.costo).toFixed(2),
+      })), ['proveedor','codigo','nombre','stock_actual','stock_minimo','cantidad_a_pedir','costo_unitario','subtotal']);
+      estado('CSV descargado.');
+    });
+  </script>
+</Base>

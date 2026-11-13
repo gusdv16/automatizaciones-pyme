@@ -1,0 +1,17 @@
+cliente,factura,monto,fecha_vencimiento,ultimo_contacto,telefono
+Ferreteria El Tornillo,FAC-001,12500,2026-11-05,2026-10-20,099123456
+Ferreteria El Tornillo,FAC-002,8900,2026-11-20,,099123456
+Distribuidora Sur,FAC-101,45200,2026-10-28,2026-10-15,098654321
+Distribuidora Sur,FAC-102,31800,2026-11-18,,098654321
+Panaderia Central,FAC-201,6700,2026-11-12,2026-11-01,097111222
+Panaderia Central,FAC-202,4200,2026-11-25,,097111222
+Supermercado Barrio,FAC-301,28900,2026-10-20,,096333444
+Supermercado Barrio,FAC-302,15400,2026-11-08,,096333444
+Libreria Escolar,FAC-401,3400,2026-11-22,,095555666
+Libreria Escolar,FAC-402,2100,2026-12-01,,095555666
+Taller Mecanico,FAC-501,18900,2026-10-15,2026-10-25,094777888
+Taller Mecanico,FAC-502,9600,2026-11-30,,094777888
+Cliente Sin Telefono,FAC-601,5200,2026-11-10,, 
+,FAC-602,3100,2026-11-14,,093999000
+Cliente Monto Mal,FAC-603,abc,2026-11-16,,092888777
+Cliente Fecha Mal,FAC-604,4800,fecha-mala,,091777666

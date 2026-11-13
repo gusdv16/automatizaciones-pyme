@@ -8,7 +8,7 @@ Probá las tres en el navegador con datos de ejemplo:
 
 > **Demo online:** https://gusdv16.github.io/automatizaciones-pyme/
 
-## Las tres soluciones
+## Las cinco soluciones
 
 ### 1. Cuadrá tu caja con el banco
 
@@ -37,6 +37,19 @@ entra directo al sistema, rompe las ventas. Esta solución revisa la planilla y 
 - una **planilla limpia** lista para cargar,
 - y una **hoja de errores** con el motivo de cada fila, para mandarle de vuelta al proveedor.
 
+### 4. Órdenes de compra por stock mínimo
+
+El encargado de compras revisa el inventario a ojo y a veces se entera tarde de que falta mercadería. Esta
+solución lee el stock actual y el mínimo de cada producto, detecta los faltantes y arma las órdenes de compra
+agrupadas por proveedor, con la cantidad a pedir y el costo estimado, en PDF y CSV.
+
+### 5. Gestor de cobranzas y cuentas corrientes
+
+En negocios que venden a crédito, el seguimiento de las facturas vencidas se hace de forma informal y se
+olvida, afectando el flujo de caja. Esta solución lee las deudas pendientes, las clasifica por estado (al día,
+por vencer, vencida), calcula lo adeudado por cliente y genera un mensaje de cobro personalizado listo para
+enviar por WhatsApp o correo.
+
 ## Cómo se usan
 
 Hay dos formas, y las dos comparten exactamente la misma lógica:
@@ -49,8 +62,11 @@ Hay dos formas, y las dos comparten exactamente la misma lógica:
 npm install
 
 npm run conciliar   # ventas vs. cartola del banco -> salidas/*.csv
+npm run conciliar-pasarela  # ventas vs. liquidaciones de pasarela (comisión + IVA)
 npm run etiquetas    # inventario -> salidas/etiquetas.pdf
 npm run precios      # lista del proveedor -> salidas/precios-limpios.xlsx
+npm run stock        # inventario -> salidas/ordenes-compra.pdf + .csv
+npm run cobranzas    # cuentas corrientes -> salidas/cobranzas.csv (con mensajes)
 ```
 
 Cada uno acepta tus propios archivos:
@@ -77,9 +93,11 @@ Eso es lo que hace creíble la solución: no funciona solo en un entorno de prue
 ```
 automatizaciones-pyme/
 ├─ core/              # Lógica compartida (funciona igual en Node y en el navegador)
-├─ conciliador/       # Programa del conciliador
+├─ conciliador/       # Programa del conciliador (banco y pasarela)
 ├─ etiquetas/         # Programa de etiquetas + códigos de barras
-├─ precios/           # Programa del validador
+├─ precios/           # Programa del validador de listas
+├─ stock/             # Programa de órdenes de compra por stock mínimo
+├─ cobranzas/         # Programa de cobranzas y cuentas corrientes
 ├─ datos-sucios/      # Muestras con errores reales
 ├─ scripts/           # Generación y sincronización de datos de ejemplo
 └─ web/               # Demo web (Astro) que reusa core/

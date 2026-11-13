@@ -45,7 +45,20 @@ Diferencia de caja : -$ 209,50
 La **diferencia de caja** es el número que le importa al dueño: cuánto muestra el banco de más (o de menos)
 respecto de lo que el sistema dice que se vendió.
 
+## Modo pasarela de pagos
+
+También puede conciliar **ventas del sistema vs. liquidaciones de una pasarela** (Mercado Pago, tarjetas),
+donde la pasarela retiene comisión e IVA. En ese modo calcula el neto esperado (bruto − comisión − IVA) y
+lo compara con lo efectivamente recibido, marcando las diferencias.
+
+```bash
+npm run conciliar-pasarela
+# o con tus propios archivos:
+node conciliador/cli.js ventas.csv liquidaciones.csv salida/ --pasarela --comision 4.5 --iva 22
+```
+
 ## Demo web
 
 https://gusdv16.github.io/automatizaciones-pyme/conciliador/ — subís los dos archivos (o usás el ejemplo)
-y ves el resultado en el navegador, sin instalar nada.
+y ves el resultado en el navegador, sin instalar nada. El selector "Tipo de conciliación" permite cambiar
+al modo pasarela.

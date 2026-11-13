@@ -9,8 +9,11 @@
   ],
   "scripts": {
     "conciliar": "node conciliador/cli.js",
+    "conciliar-pasarela": "node conciliador/cli.js --pasarela",
     "etiquetas": "node etiquetas/cli.js",
     "precios": "node precios/cli.js",
+    "stock": "node stock/cli.js",
+    "cobranzas": "node cobranzas/cli.js",
     "sync-datos": "node scripts/sync-datos.mjs",
     "predev": "node scripts/sync-datos.mjs",
     "dev": "npm --workspace web run dev",

@@ -1,0 +1,27 @@
+codigo,nombre,stock_actual,stock_minimo,proveedor,precio_costo
+7791234567890,Yerba Mate 1 kg,3,12,Distribuidora Norte,420
+7791234567891,Azucar 1 kg,18,10,Distribuidora Norte,60
+7791234567892,Aceite de girasol 900 ml,2,8,Distribuidora Norte,150
+7791234567893,Arroz 1 kg,4,15,Mayorista Sur,78
+7791234567894,Fideos 500 g,22,12,Mayorista Sur,52
+7791234567895,Cafe molido 250 g,0,6,Distribuidora Norte,260
+7791234567896,Leche entera 1 L,30,20,Lacteos del Campo,38
+7791234567897,Detergente 750 ml,1,10,Limpieza Total,115
+7791234567898,Jabon liquido 500 ml,7,8,Limpieza Total,90
+7791234567899,Galletitas surtidas 400 g,14,12,Mayorista Sur,125
+7791234567900,Pan lactal sin codigo,5,10,Panaderia Central,70
+7791234567901,Producto sin stock,abc,10,Proveedor X,100
+7791234567902,Shampoo 400 ml,4,6,Perfumeria Glam,180
+7791234567903,Agua mineral 2 L,0,24,Bebidas SA,30
+7791234567904,Papel higienico 4 rollos,9,12,Limpieza Total,140
+7791234567905,Te en saquitos 25 u,11,10,Distribuidora Norte,95
+7791234567906,Sal fina 500 g,2,8,Mayorista Sur,28
+7791234567907,Harina 1 kg,6,15,Mayorista Sur,58
+7791234567908,Mermelada 450 g,8,6,Distribuidora Norte,135
+7791234567909,Dulce de leche 500 g,1,5,Distribuidora Norte,195
+7791234567910,Snacks 200 g,10,8,Mayorista Sur,105
+7791234567911,Bebida cola 2.25 L,2,18,Bebidas SA,155
+7791234567912,Cerveza lata 473 ml,24,12,Bebidas SA,98
+7791234567913,Vino tinto 750 ml,3,6,Bebidas SA,230
+7791234567914,Pan de molde 500 g,5,10,Panaderia Central,85
+7791234567890,Yerba Mate 1 kg,3,12,Distribuidora Norte,420

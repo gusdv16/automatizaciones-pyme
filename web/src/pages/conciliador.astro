@@ -14,11 +14,32 @@ const base = import.meta.env.BASE_URL;
   <div class="panel">
     <div class="grid cols-2">
       <div>
+        <label class="field" for="sel-modo">Tipo de conciliación</label>
+        <select id="sel-modo">
+          <option value="banco">Caja vs banco (cartola)</option>
+          <option value="pasarela">Pasarela de pagos (Mercado Pago, tarjetas)</option>
+        </select>
+      </div>
+      <div id="pasarela-opts" class="hidden">
+        <div class="grid cols-2">
+          <div>
+            <label class="field" for="sel-comision">Comisión (%)</label>
+            <input id="sel-comision" type="number" value="4.5" min="0" step="0.1">
+          </div>
+          <div>
+            <label class="field" for="sel-iva">IVA sobre comisión (%)</label>
+            <input id="sel-iva" type="number" value="22" min="0" step="1">
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="grid cols-2" style="margin-top:0.6rem">
+      <div>
         <label class="field" for="f-ventas">Ventas del sistema (CSV o Excel)</label>
         <input id="f-ventas" type="file" accept=".csv,.xlsx,.xls">
       </div>
       <div>
-        <label class="field" for="f-cartola">Cartola del banco (CSV o Excel)</label>
+        <label class="field" for="f-cartola" id="lbl-cartola">Cartola del banco (CSV o Excel)</label>
         <input id="f-cartola" type="file" accept=".csv,.xlsx,.xls">
       </div>
     </div>
@@ -71,9 +92,24 @@ const base = import.meta.env.BASE_URL;
     let ventas = null;
     let cartola = null;
     let ultimo = null;
+    let modoPasarela = false;
 
     const estado = (t) => { $('#estado').textContent = t || ''; };
     const listo = () => { $('#btn-conciliar').disabled = !(ventas && cartola); };
+
+    function actualizarModo() {
+      modoPasarela = $('#sel-modo').value === 'pasarela';
+      $('#pasarela-opts').classList.toggle('hidden', !modoPasarela);
+      $('#lbl-cartola').textContent = modoPasarela
+        ? 'Liquidaciones de la pasarela (CSV o Excel)'
+        : 'Cartola del banco (CSV o Excel)';
+      // reset de datos al cambiar de modo
+      ventas = null; cartola = null; ultimo = null;
+      $('#btn-conciliar').disabled = true;
+      $('#resultado').classList.add('hidden');
+      estado(modoPasarela ? 'Modo pasarela: subí las ventas y las liquidaciones.' : 'Modo banco: subí las ventas y la cartola.');
+    }
+    $('#sel-modo').addEventListener('change', actualizarModo);
 
     $('#f-ventas').addEventListener('change', async (e) => {
       if (!e.target.files[0]) return;
@@ -89,12 +125,14 @@ const base = import.meta.env.BASE_URL;
     });
     $('#btn-ejemplo').addEventListener('click', async () => {
       estado('Cargando datos de ejemplo…');
+      const urlV = modoPasarela ? 'datos/ventas-pasarela.csv' : 'datos/ventas-sistema.csv';
+      const urlC = modoPasarela ? 'datos/liquidaciones-pasarela.csv' : 'datos/cartola-banco.csv';
       const [v, c] = await Promise.all([
-        leerEjemplo(base + 'datos/ventas-sistema.csv'),
-        leerEjemplo(base + 'datos/cartola-banco.csv'),
+        leerEjemplo(base + urlV),
+        leerEjemplo(base + urlC),
       ]);
       ventas = v; cartola = c;
-      estado(`Ejemplo cargado: ${ventas.length} ventas y ${cartola.length} abonos.`);
+      estado(`Ejemplo cargado: ${ventas.length} ventas y ${cartola.length} ${modoPasarela ? 'liquidaciones' : 'abonos'}.`);
       listo();
     });
 
@@ -106,7 +144,16 @@ const base = import.meta.env.BASE_URL;
 
     function render(r) {
       ultimo = r;
-      $('#kpis').innerHTML = `
+      const pas = r.resumen.modo === 'pasarela';
+      $('#kpis').innerHTML = pas ? `
+        <div class="kpi ok"><b>${r.resumen.cantidadConciliados}</b><span>ventas conciliadas</span></div>
+        <div class="kpi"><b>${formatearMonto(r.resumen.totalBruto)}</b><span>bruto vendido</span></div>
+        <div class="kpi warn"><b>${formatearMonto(r.resumen.totalComision)}</b><span>comisiones</span></div>
+        <div class="kpi"><b>${formatearMonto(r.resumen.totalIva)}</b><span>IVA comisiones</span></div>
+        <div class="kpi"><b>${formatearMonto(r.resumen.totalNetoEsperado)}</b><span>neto esperado</span></div>
+        <div class="kpi"><b>${formatearMonto(r.resumen.totalNetoRecibido)}</b><span>neto recibido</span></div>
+        <div class="kpi err"><b>${r.ventasSinAbono.length}</b><span>ventas sin liquidación</span></div>
+        <div class="kpi warn"><b>${r.abonosSinVenta.length}</b><span>liquidaciones sin venta</span></div>` : `
         <div class="kpi ok"><b>${r.resumen.cantidadConciliados}</b><span>movimientos conciliados</span></div>
         <div class="kpi err"><b>${r.ventasSinAbono.length}</b><span>ventas sin abono (${formatearMonto(r.resumen.montoVentasSinAbono)})</span></div>
         <div class="kpi warn"><b>${r.abonosSinVenta.length}</b><span>abonos sin venta (${formatearMonto(r.resumen.montoAbonosSinVenta)})</span></div>
@@ -125,15 +172,22 @@ const base = import.meta.env.BASE_URL;
         [{ t: 'Fecha', v: (a) => cFecha(a) }, { t: 'Monto', num: true, v: (a) => formatearMonto(a.monto) }, { t: 'Detalle', v: (a) => a.detalle || '—' }],
         r.abonosSinVenta,
       );
-      $('#t-conciliados').innerHTML = tabla(
-        [
+      const colsConc = pas ? [
+          { t: 'Venta', v: (c) => cFecha(c.venta) },
+          { t: 'Bruto', num: true, v: (c) => formatearMonto(c.bruto) },
+          { t: 'Comisión', num: true, v: (c) => formatearMonto(c.comision) },
+          { t: 'IVA', num: true, v: (c) => formatearMonto(c.iva) },
+          { t: 'Neto esperado', num: true, v: (c) => formatearMonto(c.netoEsperado) },
+          { t: 'Neto recibido', num: true, v: (c) => formatearMonto(c.netoRecibido) },
+          { t: 'Dif.', num: true, v: (c) => formatearMonto(c.diferenciaNeto) },
+          { t: 'Liquidación', v: (c) => cFecha(c.abono) },
+        ] : [
           { t: 'Venta', v: (c) => cFecha(c.venta) },
           { t: 'Monto', num: true, v: (c) => formatearMonto(c.venta.monto) },
           { t: 'Abono', v: (c) => cFecha(c.abono) },
           { t: 'Demora', num: true, v: (c) => `${c.diferenciaDias} d` },
-        ],
-        r.conciliados,
-      );
+        ];
+      $('#t-conciliados').innerHTML = tabla(colsConc, r.conciliados);
       const d = document.querySelector('#resultado details summary');
       if (d) d.textContent = `Ver los ${r.conciliados.length} movimientos conciliados`;
 
@@ -142,14 +196,25 @@ const base = import.meta.env.BASE_URL;
     }
 
     $('#btn-conciliar').addEventListener('click', () => {
-      render(conciliar(ventas, cartola, { ventanaDias: 3 }));
+      const pasarela = modoPasarela
+        ? { comisionPct: Number($('#sel-comision').value) || 0, ivaPct: Number($('#sel-iva').value) || 0 }
+        : null;
+      render(conciliar(ventas, cartola, { ventanaDias: 3, pasarela }));
     });
 
     $('#dl-conciliados').addEventListener('click', () => {
       if (!ultimo) return;
-      descargarCSV('conciliados.csv', ultimo.conciliados.map((c) => ({
-        fecha_venta: fechaISO(c.venta.fecha), monto: c.venta.monto, fecha_abono: fechaISO(c.abono.fecha), dias_de_demora: c.diferenciaDias,
-      })));
+      const pas = ultimo.resumen.modo === 'pasarela';
+      const filas = pas
+        ? ultimo.conciliados.map((c) => ({
+            fecha_venta: fechaISO(c.venta.fecha), bruto: c.bruto, comision: c.comision, iva: c.iva,
+            neto_esperado: c.netoEsperado, neto_recibido: c.netoRecibido, diferencia: c.diferenciaNeto,
+            fecha_liquidacion: fechaISO(c.abono.fecha), dias: c.diferenciaDias,
+          }))
+        : ultimo.conciliados.map((c) => ({
+            fecha_venta: fechaISO(c.venta.fecha), monto: c.venta.monto, fecha_abono: fechaISO(c.abono.fecha), dias_de_demora: c.diferenciaDias,
+          }));
+      descargarCSV(pas ? 'conciliados-pasarela.csv' : 'conciliados.csv', filas);
     });
     $('#dl-diferencias').addEventListener('click', () => {
       if (!ultimo) return;

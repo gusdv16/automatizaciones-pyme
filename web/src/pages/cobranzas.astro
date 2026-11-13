@@ -1,0 +1,153 @@
+---
+import Base from '../layouts/Base.astro';
+const base = import.meta.env.BASE_URL;
+---
+<Base title="Gestor de cobranzas y cuentas corrientes" description="Clasifica las deudas por estado, calcula lo adeudado por cliente y genera mensajes de cobro listos para enviar.">
+  <span class="eyebrow">Solución 5</span>
+  <h1>Gestor de cobranzas y cuentas corrientes</h1>
+  <p class="lead">
+    En negocios que venden a crédito, el seguimiento de las facturas vencidas se hace de forma informal y
+    se olvida, afectando el flujo de caja. Esta solución lee las deudas pendientes, las clasifica por estado
+    (al día, por vencer, vencida), calcula lo adeudado por cliente y genera un mensaje de cobro personalizado
+    listo para enviar por WhatsApp o correo.
+  </p>
+
+  <div class="panel">
+    <div class="grid cols-2">
+      <div>
+        <label class="field" for="f-lista">Cuentas corrientes (CSV o Excel)</label>
+        <input id="f-lista" type="file" accept=".csv,.xlsx,.xls">
+      </div>
+      <div>
+        <label class="field" for="sel-dias">Días para considerar "por vencer"</label>
+        <input id="sel-dias" type="number" value="7" min="0" step="1">
+      </div>
+    </div>
+    <div class="actions">
+      <button class="btn ghost" id="btn-ejemplo" type="button">Usar datos de ejemplo</button>
+      <button class="btn" id="btn-analizar" type="button" disabled>Analizar</button>
+      <button class="btn hidden" id="btn-csv" type="button" disabled>Descargar CSV</button>
+      <span class="sm" id="estado"></span>
+    </div>
+  </div>
+
+  <div id="resultado" class="hidden">
+    <h2>Resultado</h2>
+    <div class="kpis" id="kpis"></div>
+    <div id="avisos"></div>
+
+    <h3>Clientes <span class="badge err">ordenados por urgencia</span></h3>
+    <div class="tabla-scroll" id="t-clientes"></div>
+
+    <details>
+      <summary>Ver el mensaje de cobro de un cliente</summary>
+      <div style="margin-top:0.6rem">
+        <label class="field" for="sel-cliente">Cliente</label>
+        <select id="sel-cliente"></select>
+      </div>
+      <pre id="msg"></pre>
+    </details>
+  </div>
+
+  <h2>Cómo lo hace</h2>
+  <ul>
+    <li>Lee la planilla y agrupa las facturas por cliente.</li>
+    <li>Clasifica a cada cliente: <strong>vencida</strong>, <strong>por vencer</strong> o <strong>al día</strong>.</li>
+    <li>Calcula el total adeudado por cliente y mantiene el último contacto de cobro.</li>
+    <li>Genera un mensaje personalizado listo para copiar y enviar.</li>
+  </ul>
+  <div class="note">El mismo resultado lo genera el script <code>npm run cobranzas</code> desde la terminal.</div>
+
+  <script>
+    import { analizarCobranzas } from '../../../core/cobranzas.js';
+    import { formatearMonto, fechaISO } from '../../../core/formato.js';
+    import { leerArchivo, leerEjemplo } from '../lib/tabla.js';
+    import { descargarCSV } from '../lib/descargas.js';
+
+    const base = document.body.dataset.base || '/';
+    const $ = (s) => document.querySelector(s);
+    let filas = null;
+    let resultado = null;
+
+    const estado = (t) => { $('#estado').textContent = t || ''; };
+
+    $('#f-lista').addEventListener('change', async (e) => {
+      if (!e.target.files[0]) return;
+      filas = await leerArchivo(e.target.files[0]);
+      estado(`Planilla cargada: ${filas.length} filas.`);
+      $('#btn-analizar').disabled = false;
+    });
+    $('#btn-ejemplo').addEventListener('click', async () => {
+      estado('Cargando ejemplo…');
+      filas = await leerEjemplo(base + 'datos/cuentas-corrientes.csv');
+      estado(`Ejemplo cargado: ${filas.length} filas.`);
+      $('#btn-analizar').disabled = false;
+    });
+
+    function badgeEstado(e) {
+      if (e === 'vencida') return '<span class="badge err">vencida</span>';
+      if (e === 'por_vencer') return '<span class="badge warn">por vencer</span>';
+      return '<span class="badge ok">al día</span>';
+    }
+
+    $('#btn-analizar').addEventListener('click', () => {
+      const dias = Number($('#sel-dias').value) || 7;
+      resultado = analizarCobranzas(filas, { diasAviso: dias });
+
+      $('#kpis').innerHTML = `
+        <div class="kpi"><b>${resultado.resumen.total}</b><span>facturas</span></div>
+        <div class="kpi"><b>${resultado.resumen.clientes}</b><span>clientes</span></div>
+        <div class="kpi warn"><b>${formatearMonto(resultado.resumen.totalAdeudado)}</b><span>total adeudado</span></div>
+        <div class="kpi err"><b>${resultado.resumen.vencidas}</b><span>clientes vencidos</span></div>
+        <div class="kpi warn"><b>${resultado.resumen.porVencer}</b><span>por vencer</span></div>
+        <div class="kpi ok"><b>${resultado.resumen.alDia}</b><span>al día</span></div>`;
+
+      $('#avisos').innerHTML = resultado.avisos.length
+        ? `<ul class="avisos">${resultado.avisos.map((a) => `<li>${a.mensaje}</li>`).join('')}</ul>`
+        : '';
+
+      const tr = resultado.clientes.map((c) => `
+        <tr>
+          <td>${c.cliente}</td>
+          <td>${c.telefono || '—'}</td>
+          <td class="num">${c.facturas.length}</td>
+          <td class="num">${formatearMonto(c.total)}</td>
+          <td>${badgeEstado(c.estado)} <span class="sm">${c.etiqueta}</span></td>
+          <td class="sm">${c.ultimoContacto ? fechaISO(c.ultimoContacto) : '—'}</td>
+        </tr>`).join('');
+      $('#t-clientes').innerHTML = `<table><thead><tr>
+        <th>Cliente</th><th>Teléfono</th><th class="num">Facturas</th><th class="num">Adeudado</th>
+        <th>Estado</th><th>Último contacto</th></tr></thead><tbody>${tr}</tbody></table>`;
+
+      const sel = $('#sel-cliente');
+      sel.innerHTML = resultado.clientes.map((c) => `<option value="${c.cliente}">${c.cliente}</option>`).join('');
+      const actualizar = () => {
+        const c = resultado.clientes.find((x) => x.cliente === sel.value);
+        $('#msg').textContent = c ? c.mensaje : '';
+      };
+      sel.onchange = actualizar;
+      actualizar();
+
+      $('#btn-csv').disabled = false;
+      $('#btn-csv').classList.remove('hidden');
+      $('#resultado').classList.remove('hidden');
+      $('#resultado').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+
+    $('#btn-csv').addEventListener('click', () => {
+      if (!resultado) return;
+      const salida = [];
+      for (const c of resultado.clientes) {
+        for (const f of c.facturas) {
+          salida.push({
+            cliente: c.cliente, telefono: c.telefono || '', factura: f.factura, monto: f.monto,
+            fecha_vencimiento: fechaISO(f.vencimiento), estado: c.estado, dias: c.dias,
+            total_cliente: c.total, mensaje: c.mensaje,
+          });
+        }
+      }
+      descargarCSV('cobranzas.csv', salida, ['cliente','telefono','factura','monto','fecha_vencimiento','estado','dias','total_cliente','mensaje']);
+      estado('CSV descargado (con mensaje listo para enviar).');
+    });
+  </script>
+</Base>
