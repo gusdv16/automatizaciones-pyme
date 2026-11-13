@@ -1,0 +1,164 @@
+---
+import Base from '../layouts/Base.astro';
+const base = import.meta.env.BASE_URL;
+---
+<Base title="Conciliador de caja y banco" description="Cruzá las ventas del sistema con los abonos de la cartola bancaria y mirá en segundos qué falta y qué sobra.">
+  <span class="eyebrow">Herramienta 1</span>
+  <h1>Conciliador de caja y banco</h1>
+  <p class="lead">
+    Cruzar a mano las ventas del sistema con los abonos del banco es lento y propenso a errores: los formatos
+    no coinciden y el banco acredita con uno o dos días de demora. Esta herramienta aplica una regla de negocio
+    (mismo monto, fecha dentro de una ventana de días) y te dice de inmediato <strong>qué falta cobrar</strong>
+    y <strong>qué plata entró sin venta registrada</strong>.
+  </p>
+
+  <div class="panel">
+    <div class="grid cols-2">
+      <div>
+        <label class="field" for="f-ventas">Ventas del sistema (CSV o Excel)</label>
+        <input id="f-ventas" type="file" accept=".csv,.xlsx,.xls">
+      </div>
+      <div>
+        <label class="field" for="f-cartola">Cartola del banco (CSV o Excel)</label>
+        <input id="f-cartola" type="file" accept=".csv,.xlsx,.xls">
+      </div>
+    </div>
+    <div class="actions">
+      <button class="btn ghost" id="btn-ejemplo" type="button">Usar datos de ejemplo</button>
+      <button class="btn" id="btn-conciliar" type="button" disabled>Conciliar</button>
+      <span class="sm" id="estado"></span>
+    </div>
+  </div>
+
+  <div id="resultado" class="hidden">
+    <h2>Resultado</h2>
+    <div class="kpis" id="kpis"></div>
+    <div id="avisos"></div>
+
+    <h3>Ventas sin abono <span class="badge err">plata que no entró</span></h3>
+    <div class="tabla-scroll" id="t-ventas-sin"></div>
+
+    <h3>Abonos sin venta <span class="badge err">plata que entró de más</span></h3>
+    <div class="tabla-scroll" id="t-abonos-sin"></div>
+
+    <details>
+      <summary>Ver los movimientos conciliados</summary>
+      <div class="tabla-scroll" id="t-conciliados"></div>
+    </details>
+
+    <div class="actions">
+      <button class="btn ghost" id="dl-conciliados" type="button">Descargar conciliados (CSV)</button>
+      <button class="btn ghost" id="dl-diferencias" type="button">Descargar diferencias (CSV)</button>
+    </div>
+  </div>
+
+  <h2>Cómo funciona la regla</h2>
+  <ul>
+    <li><strong>Mismo monto</strong> (con una tolerancia de centavos por redondeo).</li>
+    <li><strong>Fecha dentro de una ventana de 3 días</strong>: el banco acredita con demora.</li>
+    <li>Si hay varias coincidencias posibles, gana el abono con la fecha más cercana.</li>
+    <li>Cada movimiento se usa una sola vez: nada se cuenta doble.</li>
+  </ul>
+  <p class="sm">El sistema también avisa de datos sospechosos: montos vacíos, fechas inválidas y posibles duplicados.</p>
+
+  <script>
+    import { conciliar } from '../../../core/conciliar.js';
+    import { formatearMonto, fechaISO } from '../../../core/formato.js';
+    import { leerArchivo, leerEjemplo } from '../lib/tabla.js';
+    import { descargarCSV } from '../lib/descargas.js';
+
+    const base = document.body.dataset.base || '/';
+    const $ = (s) => document.querySelector(s);
+    let ventas = null;
+    let cartola = null;
+    let ultimo = null;
+
+    const estado = (t) => { $('#estado').textContent = t || ''; };
+    const listo = () => { $('#btn-conciliar').disabled = !(ventas && cartola); };
+
+    $('#f-ventas').addEventListener('change', async (e) => {
+      if (!e.target.files[0]) return;
+      ventas = await leerArchivo(e.target.files[0]);
+      estado(`Ventas cargadas: ${ventas.length} filas.`);
+      listo();
+    });
+    $('#f-cartola').addEventListener('change', async (e) => {
+      if (!e.target.files[0]) return;
+      cartola = await leerArchivo(e.target.files[0]);
+      estado(`Cartola cargada: ${cartola.length} filas.`);
+      listo();
+    });
+    $('#btn-ejemplo').addEventListener('click', async () => {
+      estado('Cargando datos de ejemplo…');
+      const [v, c] = await Promise.all([
+        leerEjemplo(base + 'datos/ventas-sistema.csv'),
+        leerEjemplo(base + 'datos/cartola-banco.csv'),
+      ]);
+      ventas = v; cartola = c;
+      estado(`Ejemplo cargado: ${ventas.length} ventas y ${cartola.length} abonos.`);
+      listo();
+    });
+
+    function tabla(columnas, filas) {
+      const th = columnas.map((c) => `<th class="${c.num ? 'num' : ''}">${c.t}</th>`).join('');
+      const tr = filas.map((f) => `<tr>${columnas.map((c) => `<td class="${c.num ? 'num' : ''}">${c.v(f)}</td>`).join('')}</tr>`).join('');
+      return `<table><thead><tr>${th}</tr></thead><tbody>${tr || `<tr><td colspan="${columnas.length}">Nada por acá.</td></tr>`}</tbody></table>`;
+    }
+
+    function render(r) {
+      ultimo = r;
+      $('#kpis').innerHTML = `
+        <div class="kpi ok"><b>${r.resumen.cantidadConciliados}</b><span>movimientos conciliados</span></div>
+        <div class="kpi err"><b>${r.ventasSinAbono.length}</b><span>ventas sin abono (${formatearMonto(r.resumen.montoVentasSinAbono)})</span></div>
+        <div class="kpi warn"><b>${r.abonosSinVenta.length}</b><span>abonos sin venta (${formatearMonto(r.resumen.montoAbonosSinVenta)})</span></div>
+        <div class="kpi"><b>${formatearMonto(r.resumen.diferenciaCaja)}</b><span>diferencia de caja (banco − sistema)</span></div>`;
+
+      $('#avisos').innerHTML = r.avisos.length
+        ? `<ul class="avisos">${r.avisos.map((a) => `<li>${a.mensaje}</li>`).join('')}</ul>`
+        : '';
+
+      const cFecha = (r) => fechaISO(r.fecha);
+      $('#t-ventas-sin').innerHTML = tabla(
+        [{ t: 'Fecha', v: (v) => cFecha(v) }, { t: 'Monto', num: true, v: (v) => formatearMonto(v.monto) }, { t: 'Detalle', v: (v) => v.detalle || '—' }],
+        r.ventasSinAbono,
+      );
+      $('#t-abonos-sin').innerHTML = tabla(
+        [{ t: 'Fecha', v: (a) => cFecha(a) }, { t: 'Monto', num: true, v: (a) => formatearMonto(a.monto) }, { t: 'Detalle', v: (a) => a.detalle || '—' }],
+        r.abonosSinVenta,
+      );
+      $('#t-conciliados').innerHTML = tabla(
+        [
+          { t: 'Venta', v: (c) => cFecha(c.venta) },
+          { t: 'Monto', num: true, v: (c) => formatearMonto(c.venta.monto) },
+          { t: 'Abono', v: (c) => cFecha(c.abono) },
+          { t: 'Demora', num: true, v: (c) => `${c.diferenciaDias} d` },
+        ],
+        r.conciliados,
+      );
+      const d = document.querySelector('#resultado details summary');
+      if (d) d.textContent = `Ver los ${r.conciliados.length} movimientos conciliados`;
+
+      $('#resultado').classList.remove('hidden');
+      $('#resultado').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
+    $('#btn-conciliar').addEventListener('click', () => {
+      render(conciliar(ventas, cartola, { ventanaDias: 3 }));
+    });
+
+    $('#dl-conciliados').addEventListener('click', () => {
+      if (!ultimo) return;
+      descargarCSV('conciliados.csv', ultimo.conciliados.map((c) => ({
+        fecha_venta: fechaISO(c.venta.fecha), monto: c.venta.monto, fecha_abono: fechaISO(c.abono.fecha), dias_de_demora: c.diferenciaDias,
+      })));
+    });
+    $('#dl-diferencias').addEventListener('click', () => {
+      if (!ultimo) return;
+      const filas = [
+        ...ultimo.ventasSinAbono.map((v) => ({ tipo: 'venta_sin_abono', fecha: fechaISO(v.fecha), monto: v.monto, detalle: v.detalle })),
+        ...ultimo.abonosSinVenta.map((a) => ({ tipo: 'abono_sin_venta', fecha: fechaISO(a.fecha), monto: a.monto, detalle: a.detalle })),
+      ];
+      descargarCSV('diferencias.csv', filas, ['tipo', 'fecha', 'monto', 'detalle']);
+    });
+  </script>
+</Base>

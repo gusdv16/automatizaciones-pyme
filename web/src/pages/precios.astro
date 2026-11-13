@@ -1,0 +1,142 @@
+---
+import Base from '../layouts/Base.astro';
+const base = import.meta.env.BASE_URL;
+---
+<Base title="Validador de listas de precios de proveedores" description="Detectá los errores del Excel del proveedor antes de cargarlo y descargá una planilla limpia más una hoja con los motivos.">
+  <span class="eyebrow">Herramienta 3</span>
+  <h1>Validador de listas de precios</h1>
+  <p class="lead">
+    Los proveedores mandan Excel "sucios": filas repetidas, precios en cero, categorías mal escritas.
+    Si eso entra directo al sistema, rompe las ventas. Esta herramienta aplica reglas de negocio estrictas
+    y devuelve <strong>dos cosas</strong>: una planilla limpia lista para cargar y otra con los errores
+    marcados y explicados para que los entienda cualquiera, sin saber programar.
+  </p>
+
+  <div class="panel">
+    <div class="grid cols-2">
+      <div>
+        <label class="field" for="f-lista">Lista del proveedor (CSV o Excel)</label>
+        <input id="f-lista" type="file" accept=".csv,.xlsx,.xls">
+      </div>
+      <div>
+        <label class="field" for="sel-precio">Precio mínimo aceptado</label>
+        <input id="sel-precio" type="number" value="0.01" min="0" step="0.01">
+      </div>
+    </div>
+    <div class="actions">
+      <button class="btn ghost" id="btn-ejemplo" type="button">Usar datos de ejemplo</button>
+      <button class="btn" id="btn-validar" type="button" disabled>Validar</button>
+      <button class="btn hidden" id="btn-xlsx" type="button" disabled>Descargar planilla</button>
+      <span class="sm" id="estado"></span>
+    </div>
+  </div>
+
+  <div id="resultado" class="hidden">
+    <h2>Resultado</h2>
+    <div class="kpis" id="kpis"></div>
+
+    <h3>Filas con errores <span class="badge err">no cargar al sistema</span></h3>
+    <div class="tabla-scroll" id="t-errores"></div>
+
+    <details>
+      <summary>Ver las filas limpias</summary>
+      <div class="tabla-scroll" id="t-limpias"></div>
+    </details>
+  </div>
+
+  <h2>Las reglas</h2>
+  <ul>
+    <li><strong>Código</strong>: obligatorio y sin repetir (detecta filas duplicadas).</li>
+    <li><strong>Nombre</strong>: obligatorio.</li>
+    <li><strong>Precio</strong>: numérico y mayor que cero.</li>
+    <li><strong>Categoría</strong>: tiene que existir. Si está mal escrita, sugiere la correcta ("¿quisiste decir…?").</li>
+  </ul>
+  <p class="sm">La hoja de errores sale en Excel con el motivo de cada fila, para mandársela de vuelta al proveedor tal cual.</p>
+
+  <script>
+    import { validarPrecios } from '../../../core/precios.js';
+    import { formatearMonto } from '../../../core/formato.js';
+    import { leerArchivo, leerEjemplo } from '../lib/tabla.js';
+    import { descargarXLSX } from '../lib/descargas.js';
+
+    const base = document.body.dataset.base || '/';
+    const $ = (s) => document.querySelector(s);
+    let filas = null;
+    let resultado = null;
+
+    const estado = (t) => { $('#estado').textContent = t || ''; };
+
+    $('#f-lista').addEventListener('change', async (e) => {
+      if (!e.target.files[0]) return;
+      filas = await leerArchivo(e.target.files[0]);
+      estado(`Lista cargada: ${filas.length} filas.`);
+      $('#btn-validar').disabled = false;
+    });
+    $('#btn-ejemplo').addEventListener('click', async () => {
+      estado('Cargando ejemplo…');
+      filas = await leerEjemplo(base + 'datos/lista-proveedor.xlsx');
+      estado(`Ejemplo cargado: ${filas.length} filas.`);
+      $('#btn-validar').disabled = false;
+    });
+
+    function tabla(columnas, filas, filaClase) {
+      const th = columnas.map((c) => `<th class="${c.num ? 'num' : ''}">${c.t}</th>`).join('');
+      const tr = filas.map((f) => `<tr class="${filaClase ? filaClase(f) : ''}">${columnas.map((c) => `<td class="${c.num ? 'num' : ''}">${c.v(f)}</td>`).join('')}</tr>`).join('');
+      return `<table><thead><tr>${th}</tr></thead><tbody>${tr || `<tr><td colspan="${columnas.length}">Nada.</td></tr>`}</tbody></table>`;
+    }
+
+    $('#btn-validar').addEventListener('click', () => {
+      const precioMin = Number($('#sel-precio').value) || 0.01;
+      resultado = validarPrecios(filas, { precioMin });
+
+      $('#kpis').innerHTML = `
+        <div class="kpi"><b>${resultado.resumen.total}</b><span>filas leídas</span></div>
+        <div class="kpi ok"><b>${resultado.resumen.limpias}</b><span>filas limpias</span></div>
+        <div class="kpi err"><b>${resultado.resumen.conErrores}</b><span>filas con errores</span></div>`;
+
+      $('#t-errores').innerHTML = tabla(
+        [
+          { t: 'Fila', num: true, v: (e) => e.fila },
+          { t: 'Código', v: (e) => e.codigo || '—' },
+          { t: 'Nombre', v: (e) => e.nombre || '—' },
+          { t: 'Categoría', v: (e) => e.categoria || '—' },
+          { t: 'Precio', num: true, v: (e) => (e.precio === '' ? '—' : formatearMonto(e.precio)) },
+          { t: 'Motivo', v: (e) => `<ul class="motivos">${e.motivos.map((m) => `<li>${m}</li>`).join('')}</ul>` },
+        ],
+        resultado.errores,
+        () => 'err',
+      );
+      $('#t-limpias').innerHTML = tabla(
+        [
+          { t: 'Código', v: (p) => p.codigo },
+          { t: 'Nombre', v: (p) => p.nombre },
+          { t: 'Categoría', v: (p) => p.categoria },
+          { t: 'Precio', num: true, v: (p) => formatearMonto(p.precio) },
+        ],
+        resultado.limpias,
+      );
+
+      $('#btn-xlsx').disabled = false;
+      $('#btn-xlsx').classList.remove('hidden');
+      $('#resultado').classList.remove('hidden');
+      $('#resultado').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+
+    $('#btn-xlsx').addEventListener('click', () => {
+      if (!resultado) return;
+      descargarXLSX('precios-validados.xlsx', [
+        {
+          nombre: 'Limpia',
+          filas: resultado.limpias.map((p) => ({ Codigo: p.codigo, Nombre: p.nombre, Categoria: p.categoria, Precio: p.precio })),
+          encabezado: ['Codigo', 'Nombre', 'Categoria', 'Precio'],
+        },
+        {
+          nombre: 'Errores',
+          filas: resultado.errores.map((e) => ({ Fila: e.fila, Codigo: e.codigo, Nombre: e.nombre, Categoria: e.categoria, Precio: e.precio, Motivo: e.motivos.join(' | ') })),
+          encabezado: ['Fila', 'Codigo', 'Nombre', 'Categoria', 'Precio', 'Motivo'],
+        },
+      ]);
+      estado('Planilla descargada (hoja "Limpia" + hoja "Errores").');
+    });
+  </script>
+</Base>

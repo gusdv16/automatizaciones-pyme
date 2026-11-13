@@ -1,0 +1,51 @@
+---
+import Base from '../layouts/Base.astro';
+const base = import.meta.env.BASE_URL;
+---
+<Base title="Automatizaciones para PYMEs: tres herramientas que sí se pagan">
+  <span class="eyebrow">Portafolio</span>
+  <h1>Tres dolores de una PYME, resueltos con código</h1>
+  <p class="lead">
+    A una PYME no le importa el framework. Le importa que los datos cuadren, que la plata cierre
+    y no perder horas a fin de mes. Estas tres herramientas atacan exactamente eso, y podés probarlas
+    acá abajo con datos de ejemplo: corren enteras en tu navegador.
+  </p>
+
+  <div class="grid cols-3" style="margin-top:1.5rem">
+    <a class="card-link" href={base + 'conciliador/'}>
+      <span class="badge">Herramienta 1</span>
+      <h3>Conciliador de caja y banco</h3>
+      <p>Cruza las ventas del sistema con la cartola del banco y muestra qué falta y qué sobra, sin revisar fila por fila.</p>
+    </a>
+    <a class="card-link" href={base + 'etiquetas/'}>
+      <span class="badge">Herramienta 2</span>
+      <h3>Etiquetas con código de barras</h3>
+      <p>Toma el inventario y genera un PDF imprimible con nombre, precio y código Code 128 listo para la góndola.</p>
+    </a>
+    <a class="card-link" href={base + 'precios/'}>
+      <span class="badge">Herramienta 3</span>
+      <h3>Validador de listas de precios</h3>
+      <p>Detecta los errores del Excel del proveedor y devuelve una planilla limpia más una hoja con los motivos.</p>
+    </a>
+  </div>
+
+  <h2>La habilidad que las une</h2>
+  <p>
+    Los tres proyectos parten de la misma idea: <strong>desconfiar de los datos con método</strong>.
+    Lo que llega de afuera (el banco, el proveedor, un inventario cargado a mano) nunca es perfecto.
+    El código tiene que aguantar filas repetidas, precios en cero, fechas que no coinciden y errores
+    de tipeo, y aun así decirte con claridad qué está bien y qué hay que arreglar.
+  </p>
+  <div class="note">
+    Cada herramienta tiene dos formas de usarse: el <strong>script de línea de comandos</strong>
+    (Node) para dejarlo corriendo a fin de mes, y esta <strong>versión web</strong> para probarlo
+    sin instalar nada. Ambas comparten exactamente la misma lógica.
+  </div>
+
+  <h2>Probalo con datos sucios</h2>
+  <p class="lead">Los ejemplos incluyen los errores típicos de la vida real: un depósito sin identificar, un precio en cero, una categoría mal escrita. Nada está limpio a propósito.</p>
+  <div class="actions">
+    <a class="btn" href={base + 'conciliador/'}>Empezar por el conciliador</a>
+    <a class="btn ghost" href="https://github.com/gusdv16/automatizaciones-pyme">Ver el código</a>
+  </div>
+</Base>

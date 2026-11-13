@@ -1,0 +1,27 @@
+{
+  "name": "automatizaciones-pyme",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Tres herramientas que resuelven dolores reales de una PYME: conciliar caja y banco, generar etiquetas con código de barras y validar listas de precios de proveedores.",
+  "workspaces": [
+    "web"
+  ],
+  "scripts": {
+    "conciliar": "node conciliador/cli.js",
+    "etiquetas": "node etiquetas/cli.js",
+    "precios": "node precios/cli.js",
+    "sync-datos": "node scripts/sync-datos.mjs",
+    "predev": "node scripts/sync-datos.mjs",
+    "dev": "npm --workspace web run dev",
+    "prebuild": "node scripts/sync-datos.mjs",
+    "build": "npm --workspace web run build",
+    "preview": "npm --workspace web run preview"
+  },
+  "dependencies": {
+    "bwip-js": "^4.7.2",
+    "papaparse": "^5.5.3",
+    "pdf-lib": "^1.17.1",
+    "xlsx": "https://cdn.sheetjs.com/xlsx-0.20.3/xlsx-0.20.3.tgz"
+  }
+}

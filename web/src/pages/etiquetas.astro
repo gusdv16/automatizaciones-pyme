@@ -1,0 +1,142 @@
+---
+import Base from '../layouts/Base.astro';
+const base = import.meta.env.BASE_URL;
+---
+<Base title="Generador de etiquetas con código de barras" description="Toma el inventario y genera un PDF imprimible con nombre, precio y código de barras Code 128 para la góndola.">
+  <span class="eyebrow">Herramienta 2</span>
+  <h1>Etiquetas con código de barras</h1>
+  <p class="lead">
+    Cuando cambia un precio, nadie debería abrir un procesador de textos, escribir los cambios, imprimir, recortar
+    y pegar. Esta herramienta lee el inventario y arma un PDF con la grilla exacta: nombre, precio y código de
+    barras <strong>Code 128</strong> listo para colocar en la góndola. Los productos sin código o con precio en cero
+    quedan afuera, avisados.
+  </p>
+
+  <div class="panel">
+    <div class="grid cols-3">
+      <div>
+        <label class="field" for="f-inv">Inventario (CSV o Excel)</label>
+        <input id="f-inv" type="file" accept=".csv,.xlsx,.xls">
+      </div>
+      <div>
+        <label class="field" for="sel-col">Columnas por hoja</label>
+        <select id="sel-col">
+          <option>2</option><option selected>3</option><option>4</option>
+        </select>
+      </div>
+      <div>
+        <label class="field" for="sel-fil">Filas por hoja</label>
+        <select id="sel-fil">
+          <option>6</option><option>7</option><option selected>8</option><option>9</option>
+        </select>
+      </div>
+    </div>
+    <div class="actions">
+      <button class="btn ghost" id="btn-ejemplo" type="button">Usar datos de ejemplo</button>
+      <button class="btn" id="btn-generar" type="button" disabled>Generar etiquetas</button>
+      <button class="btn hidden" id="btn-pdf" type="button" disabled>Descargar PDF</button>
+      <span class="sm" id="estado"></span>
+    </div>
+  </div>
+
+  <div id="resultado" class="hidden">
+    <h2>Vista previa</h2>
+    <div class="kpis" id="kpis"></div>
+    <div id="avisos"></div>
+    <div id="hojas"></div>
+  </div>
+
+  <h2>Cómo funciona</h2>
+  <ul>
+    <li>Lee el inventario y valida cada producto: necesita <strong>código</strong>, <strong>nombre</strong> y <strong>precio mayor a cero</strong>.</li>
+    <li>Los que no pasan la validación no se imprimen, y quedan listados como avisos.</li>
+    <li>Arma la grilla según las columnas y filas elegidas y calcula cuántas hojas hacen falta.</li>
+    <li>Genera el PDF (A4) con el código de barras Code 128 y su número debajo, listo para imprimir y recortar.</li>
+  </ul>
+  <div class="note">El mismo PDF lo genera el script <code>npm run etiquetas</code> desde la terminal, sin abrir el navegador.</div>
+
+  <script>
+    import { prepararEtiquetas } from '../../../core/etiquetas.js';
+    import { generarPDFEtiquetas } from '../../../core/pdf-etiquetas.js';
+    import { formatearMonto } from '../../../core/formato.js';
+    import { renderBarcode, barcodeCanvas } from '../lib/barcode.browser.js';
+    import { leerArchivo, leerEjemplo } from '../lib/tabla.js';
+    import { descargar } from '../lib/descargas.js';
+
+    const base = document.body.dataset.base || '/';
+    const $ = (s) => document.querySelector(s);
+    let items = null;
+    let etiquetas = null;
+
+    const estado = (t) => { $('#estado').textContent = t || ''; };
+
+    $('#f-inv').addEventListener('change', async (e) => {
+      if (!e.target.files[0]) return;
+      items = await leerArchivo(e.target.files[0]);
+      estado(`Inventario cargado: ${items.length} productos.`);
+      $('#btn-generar').disabled = false;
+    });
+    $('#btn-ejemplo').addEventListener('click', async () => {
+      estado('Cargando ejemplo…');
+      items = await leerEjemplo(base + 'datos/inventario.csv');
+      estado(`Ejemplo cargado: ${items.length} productos.`);
+      $('#btn-generar').disabled = false;
+    });
+
+    $('#btn-generar').addEventListener('click', async () => {
+      const columnas = +$('#sel-col').value;
+      const filas = +$('#sel-fil').value;
+      etiquetas = prepararEtiquetas(items, { columnas, filas });
+
+      $('#kpis').innerHTML = `
+        <div class="kpi"><b>${items.length}</b><span>productos leídos</span></div>
+        <div class="kpi ok"><b>${etiquetas.total}</b><span>etiquetas a imprimir</span></div>
+        <div class="kpi warn"><b>${etiquetas.avisos.length}</b><span>productos salteados</span></div>
+        <div class="kpi"><b>${etiquetas.paginas.length}</b><span>hoja(s) A4</span></div>`;
+
+      $('#avisos').innerHTML = etiquetas.avisos.length
+        ? `<ul class="avisos">${etiquetas.avisos.map((a) => `<li>${a.mensaje}</li>`).join('')}</ul>`
+        : '';
+
+      const cont = $('#hojas');
+      cont.innerHTML = '';
+      for (let p = 0; p < etiquetas.paginas.length; p++) {
+        const hoja = document.createElement('div');
+        hoja.className = 'hoja';
+        hoja.style.gridTemplateColumns = `repeat(${columnas}, 1fr)`;
+        for (const e of etiquetas.paginas[p]) {
+          const el = document.createElement('div');
+          el.className = 'etiqueta';
+          const nom = document.createElement('div');
+          nom.className = 'nom';
+          nom.textContent = e.nombre;
+          const pre = document.createElement('div');
+          pre.className = 'pre';
+          pre.textContent = formatearMonto(e.precio);
+          const cod = document.createElement('div');
+          cod.className = 'cod';
+          cod.textContent = e.codigo;
+          el.append(nom, pre, await barcodeCanvas(e.codigo), cod);
+          hoja.append(el);
+        }
+        cont.append(hoja);
+      }
+
+      $('#btn-pdf').disabled = false;
+      $('#btn-pdf').classList.remove('hidden');
+      $('#resultado').classList.remove('hidden');
+      $('#resultado').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+
+    $('#btn-pdf').addEventListener('click', async () => {
+      if (!etiquetas) return;
+      $('#btn-pdf').disabled = true;
+      estado('Armando el PDF…');
+      const doc = await generarPDFEtiquetas(etiquetas, renderBarcode);
+      const bytes = await doc.save();
+      descargar('etiquetas.pdf', bytes, 'application/pdf');
+      estado('PDF descargado.');
+      $('#btn-pdf').disabled = false;
+    });
+  </script>
+</Base>

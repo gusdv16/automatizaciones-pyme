@@ -1,0 +1,30 @@
+codigo,nombre,categoria,precio
+1001,Aceite de girasol 900ml,Almacen,189
+1002,Arroz 1kg,Almacen,95
+1003,Azucar 1kg,Almacén,75
+1004,Cafe molido 250g,Bebidas,320
+1005,Leche entera 1L,Lacteos,48
+1006,Detergente 750ml,Limpieza,145
+1007,Jabon liquido 500ml,Limpieza,110
+1008,Shampoo 400ml,Perfumeria,210
+1009,Yerba 1kg,Almacen,0
+1010,Fideos 500g,Almacen,68
+1010,Fideos 500g,Almacen,68
+1011,Galletitas 400g,Almacen,-50
+1012,Agua mineral 2L,Bebidas,85
+1013,Papel higienico 4 rollos,Limpieza,175
+1014,Te en saquitos 25u,Bebidas,120
+1015,Sal fina 500g,Almacen,35
+1016,Harina 1kg,Almacen,72
+1017,Mermelada 450g,Almacen,165
+1018,Dulce de leche 500g,Almacen,240
+1019,Snacks 200g,Almacen,130
+1020,Bebida cola 2.25L,Bebidas,190
+1021,Cerveza lata 473ml,Bebidas,125
+1022,Vino tinto 750ml,Bebidas,280
+1023,Pan de molde 500g,Almacen,105
+1024,Queso cremoso 1kg,Lacteos,abc
+1025,Manteca 200g,Lacteos,190
+1026,Toallitas humedas,Limpiesa,130
+1027,Gaseosa 1.5L,Bebida,95
+1028,Fideos guiseros 500g,,78
