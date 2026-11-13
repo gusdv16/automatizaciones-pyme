@@ -1,57 +1,59 @@
 # Automatizaciones para PYMEs
 
-Tres herramientas que resuelven tres dolores concretos de una PyME, no tres tutoriales de framework.
+Tres soluciones para el día a día de un negocio: cuadrar la caja con el banco, imprimir etiquetas de góndola
+y revisar la planilla que manda el proveedor. Sin interfaces complicadas, sin servidores, sin datos que salgan
+de tu computadora.
 
-Una PyME no pierde plata por no tener una interfaz linda. La pierde porque **los datos no cuadran**, porque
-alguien hace a mano una tarea repetitiva a fin de mes, o porque un archivo sucio entró al sistema y rompió las ventas.
-Estas herramientas atacan exactamente eso:
+Probá las tres en el navegador con datos de ejemplo:
 
-| Herramienta | El dolor | Qué te devuelve |
-|---|---|---|
-| **Conciliador de caja y banco** | Cruzar a mano las ventas del sistema con la cartola del banco | Qué está conciliado, qué plata no entró y qué entró sin venta registrada |
-| **Generador de etiquetas** | Cambió un precio y alguien edita etiquetas a mano en Word | Un PDF A4 con nombre, precio y código de barras Code 128 listo para la góndola |
-| **Validador de listas de precios** | El proveedor manda un Excel sucio que rompe el sistema | Una planilla limpia para cargar + una hoja con los errores explicados |
+> **Demo online:** https://gusdv16.github.io/automatizaciones-pyme/
 
-La habilidad que las une es una sola: **desconfiar de los datos con método**. Todo lo que llega de afuera
-(el banco, el proveedor, un inventario cargado a mano) viene con filas repetidas, precios en cero, fechas
-que no coinciden y errores de tipeo. El código tiene que aguantarlo y decirte con claridad qué está bien y qué hay que arreglar.
+## Las tres soluciones
 
-## Probalo sin instalar nada
+### 1. Cuadrá tu caja con el banco
 
-Cada herramienta corre **entera en el navegador**, con datos de ejemplo sucios incluidos. Los archivos que
-subís no se envían a ningún servidor: todo el procesamiento es local.
+Cruzar a mano las ventas del sistema con los abonos del banco es lento y fácil de errar: los formatos no
+coinciden y el banco acredita con uno o dos días de demora. Esta solución cruza los movimientos por vos y te
+dice al instante:
 
-> Demo online: `https://gusdv16.github.io/automatizaciones-pyme/`
+- qué está conciliado,
+- qué plata no entró (ventas sin abono),
+- qué plata entró sin venta registrada (abonos sin venta),
+- y la diferencia de caja.
 
-También podés correrla localmente:
+También avisa de datos sospechosos: montos vacíos, fechas inválidas y posibles duplicados.
+
+### 2. Etiquetas de góndola listas para imprimir
+
+Cuando cambia un precio, nadie debería abrir un procesador de textos, escribir los cambios, imprimir, recortar
+y pegar. Esta solución lee el inventario y te entrega un PDF con la grilla exacta: nombre, precio y código de
+barras listo para la góndola. Los productos sin código o con precio en cero quedan afuera, avisados.
+
+### 3. Limpiá la planilla del proveedor antes de cargarla
+
+Los proveedores mandan planillas con errores: filas repetidas, precios en cero, categorías mal escritas. Si eso
+entra directo al sistema, rompe las ventas. Esta solución revisa la planilla y te devuelve dos cosas:
+
+- una **planilla limpia** lista para cargar,
+- y una **hoja de errores** con el motivo de cada fila, para mandarle de vuelta al proveedor.
+
+## Cómo se usan
+
+Hay dos formas, y las dos comparten exactamente la misma lógica:
+
+**En el navegador** (sin instalar nada): abrís la demo, subís tu archivo y descargás el resultado.
+
+**Como programa** (para dejarlo corriendo a fin de mes):
 
 ```bash
 npm install
-npm run dev      # servidor de desarrollo en http://localhost:4321/automatizaciones-pyme/
+
+npm run conciliar   # ventas vs. cartola del banco -> salidas/*.csv
+npm run etiquetas    # inventario -> salidas/etiquetas.pdf
+npm run precios      # lista del proveedor -> salidas/precios-limpios.xlsx
 ```
 
-## Usarlo como script (a fin de mes, sin abrir el navegador)
-
-Los mismos tres proyectos existen como **scripts de línea de comandos** (Node 20+). La lógica de negocio es
-exactamente la misma que la de la web: vive en `core/` y la comparten los dos.
-
-```bash
-npm install
-
-# 1) Conciliador: ventas del sistema vs. cartola del banco
-npm run conciliar
-#   -> salidas/conciliados.csv, ventas-sin-abono.csv, abonos-sin-venta.csv
-
-# 2) Etiquetas: inventario -> PDF con códigos de barras
-npm run etiquetas
-#   -> salidas/etiquetas.pdf
-
-# 3) Precios: lista del proveedor -> planilla limpia + errores
-npm run precios
-#   -> salidas/precios-limpios.xlsx (hoja "Limpia" + hoja "Errores")
-```
-
-Cada CLI acepta rutas propias:
+Cada uno acepta tus propios archivos:
 
 ```bash
 node conciliador/cli.js mis-ventas.csv mi-cartola.csv salida/
@@ -61,43 +63,38 @@ node precios/cli.js lista-proveedor.xlsx salida/
 
 ## Los datos de ejemplo son feos a propósito
 
-`datos-sucios/` no es un dataset de juguete. Tiene los errores que aparecen en la vida real:
+La carpeta `datos-sucios/` no es un dataset de juguete. Tiene los errores que aparecen en la vida real:
 
-- **Ventas / cartola**: un depósito sin identificar, un abono duplicado, una fila con el monto vacío.
-- **Inventario**: productos sin código de barras y precios en cero.
-- **Lista del proveedor**: códigos repetidos, precios negativos, un precio `"abc"`, categorías mal
-  escritas (`"Limpiesa"`, `"Bebida"`) y una fila sin categoría.
+- **Ventas / cartola:** un depósito sin identificar, un abono duplicado, una fila con el monto vacío.
+- **Inventario:** productos sin código de barras y precios en cero.
+- **Lista del proveedor:** códigos repetidos, precios negativos, un precio que en realidad es texto,
+  categorías mal escritas y una fila sin categoría.
 
-Eso es lo que hace creíble la herramienta: no funciona solo en un entorno de prueba perfecto.
+Eso es lo que hace creíble la solución: no funciona solo en un entorno de prueba perfecto.
 
 ## Estructura del repo
 
 ```
 automatizaciones-pyme/
 ├─ core/              # Lógica compartida (funciona igual en Node y en el navegador)
-│  ├─ conciliar.js    # Regla de negocio de la conciliación
-│  ├─ etiquetas.js    # Validación y paginado de etiquetas
-│  ├─ pdf-etiquetas.js# Armado del PDF (pdf-lib)
-│  ├─ precios.js      # Reglas de validación de la lista del proveedor
-│  └─ formato.js      # Normalización de montos, textos y fechas
-├─ conciliador/       # CLI del conciliador
-├─ etiquetas/         # CLI de etiquetas + generación de código de barras (Node)
-├─ precios/           # CLI del validador
+├─ conciliador/       # Programa del conciliador
+├─ etiquetas/         # Programa de etiquetas + códigos de barras
+├─ precios/           # Programa del validador
 ├─ datos-sucios/      # Muestras con errores reales
 ├─ scripts/           # Generación y sincronización de datos de ejemplo
 └─ web/               # Demo web (Astro) que reusa core/
 ```
 
-La decisión de diseño importante: **una sola lógica, dos entradas**. `core/` es JavaScript puro sin
-dependencias de Node ni del DOM, así que el CLI y el navegador ejecutan el mismo código y no pueden divergir.
-Lo único que cambia es el adaptador que dibuja el código de barras (`bwip-js` en Node vs. en el navegador).
+La decisión de diseño importante: **una sola lógica, dos entradas**. La lógica de negocio vive en `core/`
+y no depende ni de Node ni del navegador, así que el programa y la web ejecutan el mismo código y no pueden
+divergir. Lo único que cambia es cómo se dibuja el código de barras.
 
 ## Detalles técnicos
 
-- **Node 20+ / JavaScript (ESM)**, sin build para los scripts.
+- **Node 20+**, JavaScript (ESM), sin build para los programas.
 - **Astro** para la web estática, deploy a **GitHub Pages**.
-- **pdf-lib** para el PDF, **bwip-js** para el Code 128, **SheetJS** para leer/escribir Excel, **PapaParse** para CSV.
-- Los tres scripts escriben su salida en `salidas/` (ignorada por git: se regenera al correrlos).
+- **pdf-lib** para el PDF, **bwip-js** para el código de barras, **SheetJS** para leer/escribir Excel, **PapaParse** para CSV.
+- La salida de los programas va a `salidas/` (ignorada por git: se regenera al correrlos).
 
 ## Licencia
 

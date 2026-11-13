@@ -6,10 +6,9 @@ const base = import.meta.env.BASE_URL;
   <span class="eyebrow">Herramienta 1</span>
   <h1>Conciliador de caja y banco</h1>
   <p class="lead">
-    Cruzar a mano las ventas del sistema con los abonos del banco es lento y propenso a errores: los formatos
-    no coinciden y el banco acredita con uno o dos días de demora. Esta herramienta aplica una regla de negocio
-    (mismo monto, fecha dentro de una ventana de días) y te dice de inmediato <strong>qué falta cobrar</strong>
-    y <strong>qué plata entró sin venta registrada</strong>.
+    Cruzar a mano las ventas del sistema con los abonos del banco es lento y fácil de errar: los formatos no
+    coinciden y el banco acredita con uno o dos días de demora. Esta solución cruza los movimientos por vos y te
+    dice al instante <strong>qué falta cobrar</strong> y <strong>qué plata entró sin venta registrada</strong>.
   </p>
 
   <div class="panel">
@@ -52,14 +51,14 @@ const base = import.meta.env.BASE_URL;
     </div>
   </div>
 
-  <h2>Cómo funciona la regla</h2>
+  <h2>Cómo lo hace</h2>
   <ul>
-    <li><strong>Mismo monto</strong> (con una tolerancia de centavos por redondeo).</li>
-    <li><strong>Fecha dentro de una ventana de 3 días</strong>: el banco acredita con demora.</li>
-    <li>Si hay varias coincidencias posibles, gana el abono con la fecha más cercana.</li>
+    <li>Empareja los movimientos por <strong>monto</strong> (con una pequeña tolerancia por redondeo).</li>
+    <li>Permite una <strong>demora de hasta 3 días</strong>, que es lo que tarda el banco en acreditar.</li>
+    <li>Si hay varias coincidencias posibles, elige la más cercana en fecha.</li>
     <li>Cada movimiento se usa una sola vez: nada se cuenta doble.</li>
   </ul>
-  <p class="sm">El sistema también avisa de datos sospechosos: montos vacíos, fechas inválidas y posibles duplicados.</p>
+  <p class="sm">También avisa de datos sospechosos: montos vacíos, fechas inválidas y posibles duplicados.</p>
 
   <script>
     import { conciliar } from '../../../core/conciliar.js';

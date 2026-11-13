@@ -1,23 +1,23 @@
-# Conciliador de caja y banco
+# Cuadrá tu caja con el banco
 
-Cruza las **ventas del sistema** con los **abonos de la cartola bancaria** y te dice, en segundos, qué plata
-no entró y qué plata entró sin venta registrada.
+Cruza las **ventas del sistema** con los **abonos del banco** y te dice, en segundos, qué plata no entró
+y qué plata entró sin venta registrada.
 
-## El dolor
+## El problema
 
 A fin de mes alguien abre las dos planillas y compara fila por fila. Los formatos no coinciden y el banco
 acredita con uno o dos días de demora, así que las fechas tampoco son iguales. Es lento y, sobre todo, es
 fácil que se escape una diferencia.
 
-## La regla de negocio
+## Cómo lo hace
 
-- **Mismo monto** (con una tolerancia de centavos por redondeo).
-- **Fecha dentro de una ventana de días** (por defecto, 3): el banco acredita con demora.
-- Si hay varias coincidencias posibles, gana el abono con la **fecha más cercana**.
-- Cada movimiento se usa **una sola vez**: nada se cuenta doble.
+- Empareja los movimientos por **monto** (con una pequeña tolerancia por redondeo).
+- Permite una **demora de hasta 3 días**, que es lo que tarda el banco en acreditar.
+- Si hay varias coincidencias posibles, elige la más cercana en fecha.
+- Cada movimiento se usa una sola vez: nada se cuenta doble.
 
-Además, avisa de datos sospechosos en lugar de fallar en silencio: montos vacíos o no numéricos, fechas
-inválidas y **posibles duplicados** (mismo monto, fecha y detalle).
+También avisa de datos sospechosos en lugar de fallar en silencio: montos vacíos o no numéricos, fechas
+inválidas y posibles duplicados (mismo monto, fecha y detalle).
 
 ## Uso
 
@@ -47,5 +47,5 @@ respecto de lo que el sistema dice que se vendió.
 
 ## Demo web
 
-`https://gusdv16.github.io/automatizaciones-pyme/conciliador/` — subís los dos CSV (o usás el ejemplo)
+https://gusdv16.github.io/automatizaciones-pyme/conciliador/ — subís los dos archivos (o usás el ejemplo)
 y ves el resultado en el navegador, sin instalar nada.

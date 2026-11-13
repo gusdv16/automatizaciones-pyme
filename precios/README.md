@@ -1,12 +1,12 @@
-# Validador de listas de precios de proveedores
+# Limpiá la planilla del proveedor antes de cargarla
 
-Valida el Excel que manda el proveedor **antes** de cargarlo al sistema y devuelve dos cosas: una planilla
+Valida la planilla que manda el proveedor **antes** de cargarla al sistema y devuelve dos cosas: una planilla
 limpia lista para cargar y otra con los errores marcados y explicados para que los entienda cualquiera,
 sin saber programar.
 
-## El dolor
+## El problema
 
-Los proveedores mandan archivos "sucios": filas repetidas, precios en cero o negativos, categorías mal
+Los proveedores mandan archivos con errores: filas repetidas, precios en cero o negativos, categorías mal
 escritas, un precio que en realidad es texto. Si eso entra directo al sistema, rompe las ventas.
 
 ## Las reglas
@@ -14,7 +14,7 @@ escritas, un precio que en realidad es texto. Si eso entra directo al sistema, r
 - **Código**: obligatorio y sin repetir (detecta filas duplicadas).
 - **Nombre**: obligatorio.
 - **Precio**: numérico y mayor que cero.
-- **Categoría**: tiene que existir. Si está mal escrita, **sugiere la correcta** ("¿quisiste decir…?").
+- **Categoría**: tiene que existir. Si está mal escrita, sugiere la correcta ("¿quisiste decir…?").
 
 ## Uso
 
@@ -27,7 +27,7 @@ node precios/cli.js lista-proveedor.xlsx salida/
 Genera `salidas/precios-limpios.xlsx` con dos hojas:
 
 - **Limpia** — las filas que pasan todas las reglas, listas para cargar.
-- **Errores** — cada fila rechazada con el **motivo** explicado en una columna, para mandársela de vuelta
+- **Errores** — cada fila rechazada con el motivo explicado en una columna, para mandarle de vuelta
   al proveedor tal cual.
 
 ```
@@ -46,5 +46,5 @@ ERRORES ENCONTRADOS
 
 ## Demo web
 
-`https://gusdv16.github.io/automatizaciones-pyme/precios/` — subís la lista (o usás el ejemplo), ves las
+https://gusdv16.github.io/automatizaciones-pyme/precios/ — subís la lista (o usás el ejemplo), ves las
 filas con error resaltadas con su motivo y descargás la planilla con las dos hojas.
